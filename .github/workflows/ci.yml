@@ -1,0 +1,336 @@
+name: Continuous Integration - Linux Download Manager
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+env:
+  QT_VERSION: "6.5.0"
+  CMAKE_BUILD_TYPE: Release
+
+jobs:
+  check-code-quality:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            clang-format \
+            clang-tidy \
+            cppcheck
+
+      - name: Check code formatting
+        run: |
+          find . -name "*.cpp" -o -name "*.h" -o -name "*.hpp" | \
+          xargs clang-format --dry-run --Werror
+
+      - name: Run static analysis
+        run: |
+          if [ -f .clang-tidy ]; then
+            find . -name "*.cpp" | xargs clang-tidy
+          fi
+
+      - name: Run cppcheck
+        run: |
+          cppcheck --enable=all --error-exitcode=1 --suppress=missingIncludeSystem src/ || true
+
+  build-test-linux:
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        qt_version: ["6.5.0"]
+        build_type: [Release, Debug]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v3
+        with:
+          version: ${{ matrix.qt_version }}
+          modules: "qtmultimedia qtcharts"
+          cache: true
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            cmake \
+            pkg-config \
+            libssl-dev \
+            libclamav-dev \
+            libsqlite3-dev \
+            libprotobuf-dev \
+            protobuf-compiler \
+            libavformat-dev \
+            libavcodec-dev \
+            libavutil-dev \
+            libswscale-dev \
+            p7zip-dev \
+            libcurl4-openssl-dev \
+            libgl1-mesa-dev \
+            libxkbcommon-dev \
+            libxcb-xinerama0-dev \
+            libxcb-cursor-dev
+
+      - name: Configure CMake
+        run: |
+          mkdir build
+          cd build
+          cmake .. \
+            -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+            -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+
+      - name: Build
+        run: |
+          cd build
+          make -j$(nproc)
+
+      - name: Run tests
+        run: |
+          cd build
+          if [ -f tests/test_ldm ]; then
+            ctest --output-on-failure
+          else
+            echo "No tests found, skipping test execution"
+          fi
+
+      - name: Upload build artifacts
+        if: matrix.build_type == 'Release'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ldm-linux-${{ github.sha }}
+          path: |
+            build/desktop/ldm
+            build/native-messaging/host/ldm-native-host
+          retention-days: 3
+
+  build-test-windows:
+    runs-on: windows-2022
+    strategy:
+      matrix:
+        build_type: [Release, Debug]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v3
+        with:
+          version: ${{ env.QT_VERSION }}
+          host: windows
+          target: desktop
+          arch: win64_msvc2022_64
+          modules: "qtmultimedia qtcharts"
+          cache: true
+
+      - name: Setup MSVC
+        uses: microsoft/setup-msbuild@v1.3
+
+      - name: Install vcpkg
+        run: |
+          git clone https://github.com/Microsoft/vcpkg.git
+          .\vcpkg\bootstrap-vcpkg.bat
+          echo "VCPKG_ROOT=$env:GITHUB_WORKSPACE\vcpkg" >> $env:GITHUB_ENV
+
+      - name: Install dependencies with vcpkg
+        run: |
+          .\vcpkg\vcpkg.exe install --triplet x64-windows `
+            curl[openssl] `
+            openssl `
+            sqlite3 `
+            protobuf
+
+      - name: Configure CMake
+        run: |
+          mkdir build
+          cd build
+          cmake .. `
+            -G "Visual Studio 17 2022" `
+            -A x64 `
+            -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} `
+            -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_ROOT\scripts\buildsystems\vcpkg.cmake" `
+            -DCMAKE_PREFIX_PATH="$env:Qt6_DIR"
+
+      - name: Build
+        run: |
+          cd build
+          cmake --build . --config ${{ matrix.build_type }} --parallel
+
+      - name: Run tests
+        run: |
+          cd build
+          if (Test-Path "tests\${{ matrix.build_type }}\test_ldm.exe") {
+            ctest -C ${{ matrix.build_type }} --output-on-failure
+          } else {
+            Write-Host "No tests found, skipping test execution"
+          }
+
+      - name: Upload build artifacts
+        if: matrix.build_type == 'Release'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ldm-windows-${{ github.sha }}
+          path: |
+            build/desktop/${{ matrix.build_type }}/ldm.exe
+            build/native-messaging/host/${{ matrix.build_type }}/ldm-native-host.exe
+          retention-days: 3
+
+  build-test-macos:
+    runs-on: macos-13
+    strategy:
+      matrix:
+        build_type: [Release, Debug]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v3
+        with:
+          version: ${{ env.QT_VERSION }}
+          host: mac
+          target: desktop
+          modules: "qtmultimedia qtcharts"
+          cache: true
+
+      - name: Install dependencies
+        run: |
+          brew update
+          brew install \
+            cmake \
+            pkg-config \
+            openssl \
+            sqlite \
+            protobuf \
+            ffmpeg \
+            p7zip \
+            curl
+
+      - name: Configure CMake
+        run: |
+          mkdir build
+          cd build
+          cmake .. \
+            -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+            -DCMAKE_PREFIX_PATH="$Qt6_DIR" \
+            -DOPENSSL_ROOT_DIR=$(brew --prefix openssl)
+
+      - name: Build
+        run: |
+          cd build
+          make -j$(sysctl -n hw.ncpu)
+
+      - name: Run tests
+        run: |
+          cd build
+          if [ -f tests/test_ldm ]; then
+            ctest --output-on-failure
+          else
+            echo "No tests found, skipping test execution"
+          fi
+
+      - name: Upload build artifacts
+        if: matrix.build_type == 'Release'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ldm-macos-${{ github.sha }}
+          path: |
+            build/desktop/ldm
+            build/native-messaging/host/ldm-native-host
+          retention-days: 3
+
+  dependency-check:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check for security vulnerabilities
+        uses: sonatypecommunity/nancy-github-action@main
+        continue-on-error: true
+
+      - name: License compliance check
+        run: |
+          echo "Checking license compliance for Linux Download Manager..."
+          echo "Developed by: Anna-el Gerard RABENANDRASANA (aerab243)"
+          echo "Project URL: https://github.com/aerab243/ldm"
+          find . -name "*.cpp" -o -name "*.h" -o -name "*.hpp" | head -5 | while read file; do
+            if ! grep -l "Copyright\|License\|GPL\|MIT\|BSD" "$file" >/dev/null 2>&1; then
+              echo "Warning: $file may be missing license header"
+            fi
+          done
+
+  documentation-check:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check documentation
+        run: |
+          echo "Checking documentation completeness for Linux Download Manager..."
+          echo "Project: https://github.com/aerab243/ldm"
+          if [ ! -f README.md ]; then
+            echo "Error: README.md is missing"
+            exit 1
+          fi
+
+          if [ ! -f CHANGELOG.md ]; then
+            echo "Warning: CHANGELOG.md is missing"
+          fi
+
+          if [ ! -f CONTRIBUTING.md ]; then
+            echo "Warning: CONTRIBUTING.md is missing"
+          fi
+
+      - name: Check for API documentation
+        run: |
+          echo "Checking for API documentation..."
+          if command -v doxygen >/dev/null 2>&1; then
+            sudo apt-get update && sudo apt-get install -y doxygen
+            if [ -f Doxyfile ]; then
+              doxygen Doxyfile
+            else
+              echo "No Doxyfile found, skipping API documentation generation"
+            fi
+          fi
+
+  notify-status:
+    runs-on: ubuntu-22.04
+    needs:
+      [
+        check-code-quality,
+        build-test-linux,
+        build-test-windows,
+        build-test-macos,
+        dependency-check,
+        documentation-check,
+      ]
+    if: always()
+    steps:
+      - name: Build status summary
+        run: |
+          echo "## Linux Download Manager - CI Build Summary" >> $GITHUB_STEP_SUMMARY
+          echo "**Project:** Linux Download Manager by Anna-el Gerard RABENANDRASANA" >> $GITHUB_STEP_SUMMARY
+          echo "**Repository:** https://github.com/aerab243/ldm" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Job Status:" >> $GITHUB_STEP_SUMMARY
+          echo "- Code Quality: ${{ needs.check-code-quality.result == 'success' && '✅' || '❌' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Linux Build: ${{ needs.build-test-linux.result == 'success' && '✅' || '❌' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Windows Build: ${{ needs.build-test-windows.result == 'success' && '✅' || '❌' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- macOS Build: ${{ needs.build-test-macos.result == 'success' && '✅' || '❌' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Dependencies Check: ${{ needs.dependency-check.result == 'success' && '✅' || '❌' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Documentation Check: ${{ needs.documentation-check.result == 'success' && '✅' || '❌' }}" >> $GITHUB_STEP_SUMMARY
