@@ -382,7 +382,6 @@ SOFTWARE.
 ### 📧 Contact
 - **Email**: aerabenandrasana@gmail.com
 - **Developer**: aerab243 (Anna-el Gerard RABENANDRASANA)
-- **Discord**: [LDM Community](https://discord.gg/ldm)
 
 ### 💼 Professional Support
 - **Commercial Licensing**: Available for enterprise use
