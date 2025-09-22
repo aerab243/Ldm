@@ -282,7 +282,7 @@ ldm/
 
 ## 🎯 Roadmap
 
-### 🚀 Version 6.39 (Next Release)
+### 🚀 Version 1.1.0 (Next Release)
 - [ ] **Browser Extension**: Chrome/Firefox integration
 - [ ] **Advanced Scheduling**: Recurring downloads
 - [ ] **Bandwidth Management**: Time-based speed limits
@@ -382,7 +382,6 @@ SOFTWARE.
 ### 📧 Contact
 - **Email**: aerabenandrasana@gmail.com
 - **Developer**: aerab243 (Anna-el Gerard RABENANDRASANA)
-- **Discord**: [LDM Community](https://discord.gg/ldm)
 
 ### 💼 Professional Support
 - **Commercial Licensing**: Available for enterprise use
