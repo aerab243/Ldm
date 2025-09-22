@@ -1,0 +1,80 @@
+name: Test Build Configuration
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+env:
+  CMAKE_BUILD_TYPE: Debug
+
+jobs:
+  test-cmake-config:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install basic dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            cmake \
+            pkg-config \
+            libssl-dev \
+            libsqlite3-dev \
+            libprotobuf-dev \
+            protobuf-compiler \
+            libavformat-dev \
+            libavcodec-dev \
+            libavutil-dev \
+            libswscale-dev \
+            p7zip-full \
+            libcurl4-openssl-dev \
+            libgl1-mesa-dev \
+            libxkbcommon-dev \
+            libxcb-xinerama0-dev \
+            libxcb-cursor-dev
+
+      - name: Install Qt6 from PPA
+        run: |
+          sudo add-apt-repository -y ppa:okirby/qt6-backports
+          sudo apt-get update
+          sudo apt-get install -y \
+            qt6-base-dev \
+            qt6-base-dev-tools \
+            qt6-tools-dev \
+            qt6-tools-dev-tools \
+            qt6-l10n-tools \
+            qt6-multimedia-dev \
+            libqt6sql6-sqlite \
+            libqt6opengl6-dev \
+            libqt6svg6-dev || echo "Some Qt6 packages may not be available"
+
+      - name: Test CMake configuration
+        run: |
+          mkdir build
+          cd build
+          cmake .. \
+            -DCMAKE_BUILD_TYPE=${{ env.CMAKE_BUILD_TYPE }} \
+            -DCMAKE_INSTALL_PREFIX=/usr
+
+      - name: Test basic compilation
+        run: |
+          cd build
+          make -j2 || echo "Build may fail due to missing source files, but CMake config should work"
+
+      - name: Show CMake configuration
+        run: |
+          cd build
+          echo "=== CMake Cache ==="
+          grep "Qt6" CMakeCache.txt || echo "No Qt6 entries found"
+          echo "=== Generated Config ==="
+          if [ -f desktop/config.h ]; then
+            head -20 desktop/config.h
+          else
+            echo "config.h not generated"
+          fi

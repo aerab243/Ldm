@@ -1,0 +1,78 @@
+#ifndef CONFIG_H
+#define CONFIG_H
+
+/* Project information */
+#define PROJECT_NAME "Linux Download Manager"
+#define PROJECT_VERSION "@PROJECT_VERSION@"
+#define PROJECT_VERSION_MAJOR @PROJECT_VERSION_MAJOR@
+#define PROJECT_VERSION_MINOR @PROJECT_VERSION_MINOR@
+#define PROJECT_VERSION_PATCH @PROJECT_VERSION_PATCH@
+#define PROJECT_DESCRIPTION "@PROJECT_DESCRIPTION@"
+#define PROJECT_HOMEPAGE "@PROJECT_HOMEPAGE@"
+#define PROJECT_CONTACT "@PROJECT_CONTACT@"
+
+/* Build configuration */
+#define CMAKE_BUILD_TYPE "@CMAKE_BUILD_TYPE@"
+#define CMAKE_SYSTEM_NAME "@CMAKE_SYSTEM_NAME@"
+#define CMAKE_SYSTEM_VERSION "@CMAKE_SYSTEM_VERSION@"
+#define CMAKE_SYSTEM_PROCESSOR "@CMAKE_SYSTEM_PROCESSOR@"
+
+/* Qt configuration */
+#define QT_VERSION_STR "@Qt6_VERSION@"
+#cmakedefine HAVE_QT6_CHARTS
+
+/* Feature availability */
+#cmakedefine HAVE_LIBCURL
+#cmakedefine HAVE_SQLITE3
+#cmakedefine HAVE_FFMPEG
+#cmakedefine HAVE_OPENSSL
+#cmakedefine HAVE_CLAMAV
+#cmakedefine HAVE_PROTOBUF
+#cmakedefine HAVE_7ZIP
+#cmakedefine HAVE_WEBRTC
+
+/* Optional features */
+#cmakedefine ENABLE_BROWSER_INTEGRATION
+#cmakedefine ENABLE_NATIVE_MESSAGING
+#cmakedefine ENABLE_STATISTICS
+#cmakedefine ENABLE_ADVANCED_THEMES
+#cmakedefine ENABLE_MEDIA_PREVIEW
+#cmakedefine ENABLE_VIRUS_SCANNING
+#cmakedefine ENABLE_COMPRESSION
+#cmakedefine ENABLE_VIDEO_CONVERSION
+
+/* Debug features */
+#cmakedefine ENABLE_DEBUG_LOGGING
+#cmakedefine ENABLE_PERFORMANCE_MONITORING
+#cmakedefine ENABLE_MEMORY_DEBUGGING
+
+/* Installation paths */
+#define INSTALL_PREFIX "@CMAKE_INSTALL_PREFIX@"
+#define INSTALL_BINDIR "@CMAKE_INSTALL_BINDIR@"
+#define INSTALL_LIBDIR "@CMAKE_INSTALL_LIBDIR@"
+#define INSTALL_DATADIR "@CMAKE_INSTALL_DATADIR@"
+
+/* Resource paths */
+#define RESOURCE_DIR "@CMAKE_INSTALL_PREFIX@/@CMAKE_INSTALL_DATADIR@/ldm"
+#define TRANSLATION_DIR "@CMAKE_INSTALL_PREFIX@/@CMAKE_INSTALL_DATADIR@/ldm/translations"
+#define THEME_DIR "@CMAKE_INSTALL_PREFIX@/@CMAKE_INSTALL_DATADIR@/ldm/themes"
+#define PLUGIN_DIR "@CMAKE_INSTALL_PREFIX@/@CMAKE_INSTALL_LIBDIR@/ldm/plugins"
+
+/* Default configuration */
+#define DEFAULT_DOWNLOAD_DIR "@CMAKE_INSTALL_PREFIX@/Downloads"
+#define DEFAULT_DATABASE_NAME "ldm.db"
+#define DEFAULT_CONFIG_FILE "ldm.conf"
+
+/* Network configuration */
+#define DEFAULT_MAX_CONNECTIONS 8
+#define DEFAULT_MAX_SEGMENTS 4
+#define DEFAULT_TIMEOUT_SECONDS 30
+#define DEFAULT_RETRY_COUNT 3
+
+/* UI configuration */
+#define DEFAULT_WINDOW_WIDTH 1024
+#define DEFAULT_WINDOW_HEIGHT 768
+#define DEFAULT_THEME "default"
+#define DEFAULT_LANGUAGE "en"
+
+#endif // CONFIG_H

@@ -41,32 +41,20 @@ jobs:
 
       - name: Install dependencies with vcpkg
         run: |
-          .\vcpkg\vcpkg.exe install --triplet x64-windows `
-            curl[openssl] `
-            openssl `
-            sqlite3 `
-            protobuf `
-            7zip `
-            clamav
+          .\vcpkg\vcpkg.exe install --triplet x64-windows curl[openssl] openssl sqlite3 protobuf 7zip
 
       - name: Download FFmpeg
         run: |
           Invoke-WebRequest -Uri "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl-shared.zip" -OutFile "ffmpeg.zip"
           Expand-Archive -Path "ffmpeg.zip" -DestinationPath "."
-          $ffmpegDir = Get-ChildItem -Directory -Name "ffmpeg-*"
+          $ffmpegDir = Get-ChildItem -Directory -Name "ffmpeg-*" | Select-Object -First 1
           echo "FFMPEG_ROOT=$env:GITHUB_WORKSPACE\$ffmpegDir" >> $env:GITHUB_ENV
 
       - name: Configure CMake
         run: |
           mkdir build
           cd build
-          cmake .. `
-            -G "Visual Studio 17 2022" `
-            -A x64 `
-            -DCMAKE_BUILD_TYPE=${{ env.CMAKE_BUILD_TYPE }} `
-            -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_ROOT\scripts\buildsystems\vcpkg.cmake" `
-            -DCMAKE_PREFIX_PATH="$env:Qt6_DIR" `
-            -DFFMPEG_ROOT="$env:FFMPEG_ROOT"
+          cmake .. -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=${{ env.CMAKE_BUILD_TYPE }} -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_ROOT\scripts\buildsystems\vcpkg.cmake" -DCMAKE_PREFIX_PATH="$env:Qt6_DIR" -DFFMPEG_ROOT="$env:FFMPEG_ROOT"
 
       - name: Build
         run: |
@@ -85,7 +73,9 @@ jobs:
 
       - name: Copy FFmpeg libraries
         run: |
-          Copy-Item "$env:FFMPEG_ROOT\bin\*.dll" -Destination "build\install\bin\"
+          if (Test-Path "$env:FFMPEG_ROOT\bin") {
+            Copy-Item "$env:FFMPEG_ROOT\bin\*.dll" -Destination "build\install\bin\" -ErrorAction SilentlyContinue
+          }
 
       - name: Copy vcpkg dependencies
         run: |
@@ -94,23 +84,29 @@ jobs:
             Copy-Item "$vcpkgBin\*.dll" -Destination "build\install\bin\" -ErrorAction SilentlyContinue
           }
 
-      - name: Create installer with NSIS
+      - name: Install NSIS
         run: |
-          # Download NSIS
-          Invoke-WebRequest -Uri "https://downloads.sourceforge.net/project/nsis/NSIS%203/3.08/nsis-3.08-setup.exe" -OutFile "nsis-setup.exe"
+          $nsisUrl = "https://downloads.sourceforge.net/project/nsis/NSIS%203/3.08/nsis-3.08-setup.exe"
+          Invoke-WebRequest -Uri $nsisUrl -OutFile "nsis-setup.exe"
           Start-Process -FilePath "nsis-setup.exe" -ArgumentList "/S" -Wait
 
-          # Create NSIS script
+          # Add NSIS to PATH
+          $nsisPath = "C:\Program Files (x86)\NSIS"
+          echo "$nsisPath" >> $env:GITHUB_PATH
+
+      - name: Create NSIS installer script
+        run: |
+          $version = if ($env:GITHUB_REF -match "refs/tags/(.*)") { $matches[1] } else { "dev" }
+
           $nsisScript = @"
           !include "MUI2.nsh"
 
           Name "Linux Download Manager"
-          OutFile "LDM-Setup-${{ github.ref_name }}-Windows.exe"
+          OutFile "LDM-Setup-$version-Windows.exe"
           InstallDir "`$PROGRAMFILES64\Linux Download Manager"
           RequestExecutionLevel admin
 
           !insertmacro MUI_PAGE_WELCOME
-          !insertmacro MUI_PAGE_LICENSE "LICENSE"
           !insertmacro MUI_PAGE_DIRECTORY
           !insertmacro MUI_PAGE_INSTFILES
           !insertmacro MUI_PAGE_FINISH
@@ -154,13 +150,15 @@ jobs:
 
           $nsisScript | Out-File -FilePath "installer.nsi" -Encoding UTF8
 
-          # Build installer
+      - name: Build NSIS installer
+        run: |
           & "C:\Program Files (x86)\NSIS\makensis.exe" installer.nsi
 
       - name: Create portable ZIP
         run: |
+          $version = if ($env:GITHUB_REF -match "refs/tags/(.*)") { $matches[1] } else { "dev" }
           cd build\install
-          Compress-Archive -Path * -DestinationPath "..\LDM-Portable-${{ github.ref_name }}-Windows.zip"
+          Compress-Archive -Path * -DestinationPath "..\LDM-Portable-$version-Windows.zip"
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4

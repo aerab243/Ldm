@@ -8,8 +8,18 @@ set(PROJECT_CONTACT "Anna-el Gerard RABENANDRASANA <aerabenandrasana@gmail.com>"
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Find Qt6
-find_package(Qt6 6.5 REQUIRED COMPONENTS Core Widgets Network Sql Multimedia Charts LinguistTools)
+# Find Qt6 - make Charts optional since it might not be available in all distributions
+find_package(Qt6 6.2 REQUIRED COMPONENTS Core Widgets Network Sql Multimedia LinguistTools)
+find_package(Qt6 QUIET OPTIONAL_COMPONENTS Charts)
+
+# Check if Qt6Charts is available
+if(Qt6Charts_FOUND)
+    message(STATUS "Qt6Charts found - charts functionality will be enabled")
+    set(HAVE_QT6_CHARTS TRUE)
+else()
+    message(WARNING "Qt6Charts not found - charts functionality will be disabled")
+    set(HAVE_QT6_CHARTS FALSE)
+endif()
 
 # Enable Qt6 automoc, autorcc, autouic
 set(CMAKE_AUTOMOC ON)
@@ -70,7 +80,7 @@ else()
     set(CPACK_DEBIAN_PACKAGE_SECTION "utils")
     set(CPACK_DEBIAN_PACKAGE_PRIORITY "optional")
     set(CPACK_DEBIAN_PACKAGE_HOMEPAGE "https://github.com/aerab243/ldm")
-    set(CPACK_DEBIAN_PACKAGE_DEPENDS "libqt6core6, libqt6widgets6, libqt6network6, libqt6sql6, libqt6multimedia6, libqt6charts6, libcurl4, libssl3, libsqlite3-0, libprotobuf23")
+    set(CPACK_DEBIAN_PACKAGE_DEPENDS "libqt6core6 (>= 6.2), libqt6widgets6 (>= 6.2), libqt6network6 (>= 6.2), libqt6sql6 (>= 6.2), libqt6multimedia6 (>= 6.2), libcurl4, libssl3, libsqlite3-0, libprotobuf23")
     set(CPACK_DEBIAN_PACKAGE_RECOMMENDS "ffmpeg, p7zip-full, clamav")
     set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "${CMAKE_CURRENT_SOURCE_DIR}/installer/debian/postinst;${CMAKE_CURRENT_SOURCE_DIR}/installer/debian/prerm")
 
@@ -79,7 +89,7 @@ else()
     set(CPACK_RPM_PACKAGE_GROUP "Applications/Internet")
     set(CPACK_RPM_PACKAGE_LICENSE "GPL")
     set(CPACK_RPM_PACKAGE_URL "https://github.com/aerab243/ldm")
-    set(CPACK_RPM_PACKAGE_REQUIRES "qt6-qtbase >= 6.5, qt6-qtmultimedia >= 6.5, qt6-qtcharts >= 6.5, libcurl >= 7.0, openssl >= 1.1, sqlite >= 3.0, protobuf >= 3.0")
+    set(CPACK_RPM_PACKAGE_REQUIRES "qt6-qtbase >= 6.2, qt6-qtmultimedia >= 6.2, libcurl >= 7.0, openssl >= 1.1, sqlite >= 3.0, protobuf >= 3.0")
     set(CPACK_RPM_PACKAGE_SUGGESTS "ffmpeg, p7zip, clamav")
     set(CPACK_RPM_POST_INSTALL_SCRIPT_FILE "${CMAKE_CURRENT_SOURCE_DIR}/installer/rpm/postinstall.sh")
     set(CPACK_RPM_PRE_UNINSTALL_SCRIPT_FILE "${CMAKE_CURRENT_SOURCE_DIR}/installer/rpm/preuninstall.sh")
