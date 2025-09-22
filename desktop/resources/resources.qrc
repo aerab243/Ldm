@@ -1,0 +1,44 @@
+<RCC>
+    <qresource prefix="/">
+        <file>icons/app.png</file>
+        <file>icons/add_url.png</file>
+        <file>icons/resume.png</file>
+        <file>icons/stop.png</file>
+        <file>icons/stop_all.png</file>
+        <file>icons/delete.png</file>
+        <file>icons/delete_completed.png</file>
+        <file>icons/options.png</file>
+        <file>icons/scheduler.png</file>
+        <file>icons/start_queue.png</file>
+        <file>icons/stop_queue.png</file>
+        <file>icons/grabber.png</file>
+        <file>icons/tell_friend.png</file>
+
+        <!-- Category icons -->
+        <file>icons/category_all.png</file>
+        <file>icons/category_compressed.png</file>
+        <file>icons/category_documents.png</file>
+        <file>icons/category_music.png</file>
+        <file>icons/category_programs.png</file>
+        <file>icons/category_video.png</file>
+        <file>icons/category_unfinished.png</file>
+        <file>icons/category_finished.png</file>
+        <file>icons/category_queues.png</file>
+
+        <!-- File type icons -->
+        <file>icons/file_audio.png</file>
+        <file>icons/file_video.png</file>
+        <file>icons/file_archive.png</file>
+        <file>icons/file_document.png</file>
+        <file>icons/file_program.png</file>
+        <file>icons/file_generic.png</file>
+
+        <!-- UI elements -->
+        <file>icons/pause.png</file>
+        <file>icons/play.png</file>
+        <file>icons/cancel.png</file>
+        <file>icons/settings.png</file>
+        <file>icons/folder.png</file>
+        <file>icons/download.png</file>
+    </qresource>
+</RCC>

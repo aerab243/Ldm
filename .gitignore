@@ -1,0 +1,76 @@
+# ---- Compiled source ----
+*.o
+*.obj
+*.lo
+*.la
+*.a
+*.lib
+*.dll
+*.so
+*.dylib
+*.exe
+*.out
+*.app
+
+# ---- Qt specific ----
+*.pro.user
+*.pro.user.*
+*.qbs.user
+*.qbs.user.*
+*.moc
+moc_*.cpp
+qrc_*.cpp
+ui_*.h
+
+# ---- Qt build directories ----
+build*/
+bin/
+debug/
+release/
+x64/
+x86/
+
+# ---- Qt Creator specific ----
+*.autosave
+*.creator
+*.creator.user
+*.creator.user.*
+*.creator.workspace
+*.creator.cmake
+*.pro.user
+*.pro.user.*
+
+# ---- Logs & temp ----
+*.log
+*.tmp
+*.bak
+*.swp
+*.swo
+*.~*
+
+# ---- OS specific ----
+.DS_Store
+Thumbs.db
+
+# ---- CMake ----
+CMakeCache.txt
+CMakeFiles/
+CMakeScripts/
+Testing/
+Makefile
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+CTestTestfile.cmake
+
+# ---- VSCode / CLion ----
+.vscode/
+.idea/
+
+# ---- Additional project-specific ----
+.specify/
+.github/
+specs/
+
+# ---- Other ----
+*.plist

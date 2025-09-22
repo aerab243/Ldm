@@ -1,0 +1,9 @@
+{
+  "name": "com.ldm.downloadmanager",
+  "description": "Native messaging host for LDM Download Manager",
+  "path": "NativeHost",  // Placeholder - actual path set during installation
+  "type": "stdio",
+  "allowed_origins": [
+    "chrome-extension://<extension-id>/"  // Placeholder - replace with actual extension ID
+  ]
+}

@@ -1,0 +1,1 @@
+{"name": "com.ldm.downloadmanager", "description": "Native messaging host for LDM Download Manager", "path": "NativeHost", "type": "stdio", "allowed_extensions": ["ldm@downloadmanager.com"]}
