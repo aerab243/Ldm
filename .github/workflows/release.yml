@@ -1,0 +1,468 @@
+name: Create Release - Linux Download Manager
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version (e.g., v1.0.0)"
+        required: true
+        type: string
+      prerelease:
+        description: "Mark as prerelease"
+        required: false
+        type: boolean
+        default: false
+
+env:
+  QT_VERSION: "6.5.0"
+  CMAKE_BUILD_TYPE: Release
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    outputs:
+      release_id: ${{ steps.create_release.outputs.id }}
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+      version: ${{ steps.get_version.outputs.version }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get version
+        id: get_version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          if [ -f CHANGELOG.md ]; then
+            # Extract changelog for this version
+            awk '/^## \[${{ steps.get_version.outputs.version }}\]/{flag=1; next} /^## \[/{flag=0} flag' CHANGELOG.md > current_changelog.md
+            echo "changelog_file=current_changelog.md" >> $GITHUB_OUTPUT
+          else
+            echo "No CHANGELOG.md found, creating basic release notes"
+            echo "# Release ${{ steps.get_version.outputs.version }}" > current_changelog.md
+            echo "" >> current_changelog.md
+            echo "## What's Changed" >> current_changelog.md
+            echo "- New release with latest features and improvements" >> current_changelog.md
+            echo "changelog_file=current_changelog.md" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Release
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.get_version.outputs.version }}
+          name: Linux Download Manager ${{ steps.get_version.outputs.version }}
+          body_path: ${{ steps.changelog.outputs.changelog_file }}
+          draft: true
+          prerelease: ${{ github.event.inputs.prerelease || false }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-linux:
+    needs: create-release
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        include:
+          - name: "Ubuntu DEB"
+            container: "ubuntu:22.04"
+            package_type: "deb"
+          - name: "CentOS RPM"
+            container: "quay.io/centos/centos:stream9"
+            package_type: "rpm"
+          - name: "AppImage"
+            container: "ubuntu:20.04"
+            package_type: "appimage"
+
+    container: ${{ matrix.container }}
+
+    steps:
+      - name: Install dependencies (Ubuntu/DEB)
+        if: matrix.package_type == 'deb' || matrix.package_type == 'appimage'
+        run: |
+          apt-get update
+          apt-get install -y \
+            build-essential \
+            cmake \
+            git \
+            wget \
+            curl \
+            pkg-config \
+            libssl-dev \
+            libclamav-dev \
+            libsqlite3-dev \
+            libprotobuf-dev \
+            protobuf-compiler \
+            libavformat-dev \
+            libavcodec-dev \
+            libavutil-dev \
+            libswscale-dev \
+            p7zip-dev \
+            libcurl4-openssl-dev \
+            qt6-base-dev \
+            qt6-multimedia-dev \
+            qt6-charts-dev \
+            qt6-tools-dev \
+            qt6-l10n-tools \
+            libqt6sql6-sqlite \
+            libgl1-mesa-dev \
+            libxkbcommon-dev \
+            libxcb-xinerama0-dev \
+            libxcb-cursor-dev \
+            file \
+            desktop-file-utils
+
+      - name: Install additional AppImage dependencies
+        if: matrix.package_type == 'appimage'
+        run: |
+          apt-get install -y \
+            fuse \
+            libfuse2 \
+            zsync \
+            imagemagick
+          # Download linuxdeploy and appimagetool
+          wget -O /usr/local/bin/linuxdeploy https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
+          wget -O /usr/local/bin/linuxdeploy-plugin-qt https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/continuous/linuxdeploy-plugin-qt-x86_64.AppImage
+          wget -O /usr/local/bin/appimagetool https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage
+          chmod +x /usr/local/bin/linuxdeploy /usr/local/bin/linuxdeploy-plugin-qt /usr/local/bin/appimagetool
+
+      - name: Install dependencies (CentOS/RPM)
+        if: matrix.package_type == 'rpm'
+        run: |
+          dnf update -y
+          dnf groupinstall -y "Development Tools"
+          dnf install -y \
+            cmake \
+            git \
+            wget \
+            curl \
+            pkg-config \
+            openssl-devel \
+            clamav-devel \
+            sqlite-devel \
+            protobuf-devel \
+            protobuf-compiler \
+            ffmpeg-devel \
+            p7zip-devel \
+            libcurl-devel \
+            qt6-qtbase-devel \
+            qt6-qtmultimedia-devel \
+            qt6-qtcharts-devel \
+            qt6-qttools-devel \
+            qt6-linguist \
+            mesa-libGL-devel \
+            libxkbcommon-devel \
+            xcb-util-cursor-devel \
+            rpm-build \
+            rpmdevtools
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Update version in CMakeLists.txt
+        run: |
+          VERSION="${{ needs.create-release.outputs.version }}"
+          VERSION_NUM="${VERSION#v}"
+          sed -i "s/project(LDM VERSION [0-9.]*/project(LDM VERSION $VERSION_NUM/" CMakeLists.txt
+          echo "$VERSION_NUM" > VERSION
+
+      - name: Configure CMake
+        run: |
+          mkdir build
+          cd build
+          cmake .. \
+            -DCMAKE_BUILD_TYPE=${{ env.CMAKE_BUILD_TYPE }} \
+            -DCMAKE_INSTALL_PREFIX=/usr \
+            -DCPACK_GENERATOR=${{ matrix.package_type == 'deb' && 'DEB' || matrix.package_type == 'rpm' && 'RPM' || 'TGZ' }}
+
+      - name: Build
+        run: |
+          cd build
+          make -j$(nproc)
+
+      - name: Create DEB package
+        if: matrix.package_type == 'deb'
+        run: |
+          cd build
+          # Configure CPack for DEB
+          cat >> CPackConfig.cmake << EOF
+          set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Anna-el Gerard RABENANDRASANA <aerabenandrasana@gmail.com>")
+          set(CPACK_DEBIAN_PACKAGE_DESCRIPTION "Linux Download Manager - A modern, feature-rich download manager for Linux")
+          set(CPACK_DEBIAN_PACKAGE_DEPENDS "libqt6core6, libqt6widgets6, libqt6network6, libqt6sql6, libqt6multimedia6, libqt6charts6, libcurl4, libssl3, libclamav9, libsqlite3-0, libprotobuf23")
+          set(CPACK_DEBIAN_PACKAGE_SECTION "utils")
+          set(CPACK_DEBIAN_PACKAGE_PRIORITY "optional")
+          set(CPACK_PACKAGE_FILE_NAME "ldm-${{ needs.create-release.outputs.version }}-amd64")
+          EOF
+          make package
+
+      - name: Create RPM package
+        if: matrix.package_type == 'rpm'
+        run: |
+          cd build
+          # Configure CPack for RPM
+          cat >> CPackConfig.cmake << EOF
+          set(CPACK_RPM_PACKAGE_SUMMARY "Linux Download Manager - Modern download manager for Linux")
+          set(CPACK_RPM_PACKAGE_DESCRIPTION "A modern, feature-rich download manager for Linux with Qt6 interface, browser integration, and advanced download management features")
+          set(CPACK_RPM_PACKAGE_GROUP "Applications/Internet")
+          set(CPACK_RPM_PACKAGE_LICENSE "GPL")
+          set(CPACK_RPM_PACKAGE_URL "https://github.com/aerab243/ldm")
+          set(CPACK_RPM_PACKAGE_REQUIRES "qt6-qtbase, qt6-qtmultimedia, qt6-qtcharts, libcurl, openssl, clamav, sqlite, protobuf")
+          set(CPACK_PACKAGE_FILE_NAME "ldm-${{ needs.create-release.outputs.version }}-x86_64")
+          EOF
+          make package
+
+      - name: Create AppImage
+        if: matrix.package_type == 'appimage'
+        run: |
+          cd build
+          make install DESTDIR=AppDir
+
+          # Create desktop file
+          mkdir -p AppDir/usr/share/applications
+          cat > AppDir/usr/share/applications/ldm.desktop << EOF
+          [Desktop Entry]
+          Type=Application
+          Name=Linux Download Manager
+          Comment=Modern download manager for Linux
+          Exec=ldm
+          Icon=ldm
+          Categories=Network;FileTransfer;
+          StartupWMClass=ldm
+          Keywords=download;manager;internet;transfer;
+          EOF
+
+          # Create icon (placeholder - replace with actual icon)
+          mkdir -p AppDir/usr/share/icons/hicolor/256x256/apps
+          convert -size 256x256 xc:blue AppDir/usr/share/icons/hicolor/256x256/apps/ldm.png 2>/dev/null || echo "Icon creation skipped"
+
+          # Set Qt plugin path for AppImage
+          export QML_SOURCES_PATHS=/usr/lib/x86_64-linux-gnu/qt6/qml
+          export LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH
+
+          # Create AppImage
+          /usr/local/bin/linuxdeploy --appdir AppDir --plugin qt --output appimage
+
+          # Rename AppImage with version
+          if [ -f LDM-*.AppImage ]; then
+            mv LDM-*.AppImage LDM-${{ needs.create-release.outputs.version }}-x86_64.AppImage
+          fi
+
+      - name: Upload release assets
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ needs.create-release.outputs.version }}
+          files: |
+            build/*.deb
+            build/*.rpm
+            build/*.AppImage
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-windows:
+    needs: create-release
+    runs-on: windows-2022
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v3
+        with:
+          version: ${{ env.QT_VERSION }}
+          host: windows
+          target: desktop
+          arch: win64_msvc2022_64
+          modules: "qtmultimedia qtcharts"
+          cache: true
+
+      - name: Setup MSVC
+        uses: microsoft/setup-msbuild@v1.3
+
+      - name: Install vcpkg
+        run: |
+          git clone https://github.com/Microsoft/vcpkg.git
+          .\vcpkg\bootstrap-vcpkg.bat
+          echo "VCPKG_ROOT=$env:GITHUB_WORKSPACE\vcpkg" >> $env:GITHUB_ENV
+
+      - name: Install dependencies with vcpkg
+        run: |
+          .\vcpkg\vcpkg.exe install --triplet x64-windows `
+            curl[openssl] `
+            openssl `
+            sqlite3 `
+            protobuf `
+            7zip `
+            clamav
+
+      - name: Download FFmpeg
+        run: |
+          Invoke-WebRequest -Uri "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl-shared.zip" -OutFile "ffmpeg.zip"
+          Expand-Archive -Path "ffmpeg.zip" -DestinationPath "."
+          $ffmpegDir = Get-ChildItem -Directory -Name "ffmpeg-*"
+          echo "FFMPEG_ROOT=$env:GITHUB_WORKSPACE\$ffmpegDir" >> $env:GITHUB_ENV
+
+      - name: Update version in CMakeLists.txt
+        run: |
+          $version = "${{ needs.create-release.outputs.version }}"
+          $versionNum = $version -replace "^v", ""
+          (Get-Content CMakeLists.txt) -replace "project\(LDM VERSION [0-9.]*", "project(LDM VERSION $versionNum" | Set-Content CMakeLists.txt
+          $versionNum | Out-File -FilePath VERSION -Encoding UTF8
+
+      - name: Configure CMake
+        run: |
+          mkdir build
+          cd build
+          cmake .. `
+            -G "Visual Studio 17 2022" `
+            -A x64 `
+            -DCMAKE_BUILD_TYPE=${{ env.CMAKE_BUILD_TYPE }} `
+            -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_ROOT\scripts\buildsystems\vcpkg.cmake" `
+            -DCMAKE_PREFIX_PATH="$env:Qt6_DIR" `
+            -DFFMPEG_ROOT="$env:FFMPEG_ROOT"
+
+      - name: Build
+        run: |
+          cd build
+          cmake --build . --config ${{ env.CMAKE_BUILD_TYPE }} --parallel
+
+      - name: Install
+        run: |
+          cd build
+          cmake --install . --config ${{ env.CMAKE_BUILD_TYPE }} --prefix install
+
+      - name: Copy Qt dependencies
+        run: |
+          cd build
+          & "$env:Qt6_DIR\bin\windeployqt.exe" --release --qmldir ..\desktop install\bin\ldm.exe
+
+      - name: Copy FFmpeg libraries
+        run: |
+          Copy-Item "$env:FFMPEG_ROOT\bin\*.dll" -Destination "build\install\bin\"
+
+      - name: Copy vcpkg dependencies
+        run: |
+          $vcpkgBin = "$env:VCPKG_ROOT\installed\x64-windows\bin"
+          if (Test-Path $vcpkgBin) {
+            Copy-Item "$vcpkgBin\*.dll" -Destination "build\install\bin\" -ErrorAction SilentlyContinue
+          }
+
+      - name: Create installer with NSIS
+        run: |
+          # Download NSIS
+          Invoke-WebRequest -Uri "https://downloads.sourceforge.net/project/nsis/NSIS%203/3.08/nsis-3.08-setup.exe" -OutFile "nsis-setup.exe"
+          Start-Process -FilePath "nsis-setup.exe" -ArgumentList "/S" -Wait
+
+          # Create NSIS script
+          $version = "${{ needs.create-release.outputs.version }}"
+          $nsisScript = @"
+          !include "MUI2.nsh"
+
+          Name "Linux Download Manager"
+          OutFile "LDM-Setup-$version-Windows.exe"
+          InstallDir "`$PROGRAMFILES64\Linux Download Manager"
+          RequestExecutionLevel admin
+
+          !insertmacro MUI_PAGE_WELCOME
+          !insertmacro MUI_PAGE_DIRECTORY
+          !insertmacro MUI_PAGE_INSTFILES
+          !insertmacro MUI_PAGE_FINISH
+
+          !insertmacro MUI_UNPAGE_WELCOME
+          !insertmacro MUI_UNPAGE_CONFIRM
+          !insertmacro MUI_UNPAGE_INSTFILES
+
+          !insertmacro MUI_LANGUAGE "English"
+
+          Section "Linux Download Manager" SecLDM
+            SetOutPath "`$INSTDIR"
+            File /r "build\install\*"
+
+            WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\LDM" "DisplayName" "Linux Download Manager"
+            WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\LDM" "Publisher" "Anna-el Gerard RABENANDRASANA"
+            WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\LDM" "URLInfoAbout" "https://github.com/aerab243/ldm"
+            WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\LDM" "HelpLink" "https://github.com/aerab243/ldm/wiki"
+            WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\LDM" "UninstallString" "`$INSTDIR\uninstall.exe"
+            WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\LDM" "DisplayVersion" "$version"
+            WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\LDM" "NoModify" 1
+            WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\LDM" "NoRepair" 1
+
+            CreateDirectory "`$SMPROGRAMS\Linux Download Manager"
+            CreateShortcut "`$SMPROGRAMS\Linux Download Manager\Linux Download Manager.lnk" "`$INSTDIR\bin\ldm.exe"
+            CreateShortcut "`$DESKTOP\Linux Download Manager.lnk" "`$INSTDIR\bin\ldm.exe"
+
+            WriteUninstaller "`$INSTDIR\uninstall.exe"
+          SectionEnd
+
+          Section "Uninstall"
+            Delete "`$INSTDIR\uninstall.exe"
+            RMDir /r "`$INSTDIR"
+
+            Delete "`$SMPROGRAMS\Linux Download Manager\Linux Download Manager.lnk"
+            RMDir "`$SMPROGRAMS\Linux Download Manager"
+            Delete "`$DESKTOP\Linux Download Manager.lnk"
+
+            DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\LDM"
+          SectionEnd
+          "@
+
+          $nsisScript | Out-File -FilePath "installer.nsi" -Encoding UTF8
+
+          # Build installer
+          & "C:\Program Files (x86)\NSIS\makensis.exe" installer.nsi
+
+      - name: Create portable ZIP
+        run: |
+          cd build\install
+          Compress-Archive -Path * -DestinationPath "..\LDM-Portable-${{ needs.create-release.outputs.version }}-Windows.zip"
+
+      - name: Upload release assets
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ needs.create-release.outputs.version }}
+          files: |
+            LDM-Setup-*.exe
+            build/LDM-Portable-*.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  finalize-release:
+    needs: [create-release, build-linux, build-windows]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ needs.create-release.outputs.version }}
+          draft: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create release summary
+        run: |
+          echo "## Linux Download Manager - Release Summary" >> $GITHUB_STEP_SUMMARY
+          echo "**Project:** Linux Download Manager by Anna-el Gerard RABENANDRASANA" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** ${{ needs.create-release.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Release URL:** https://github.com/aerab243/ldm/releases/tag/${{ needs.create-release.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Packages Created:" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Linux DEB package" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Linux RPM package" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Linux AppImage" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Windows Installer (.exe)" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Windows Portable (.zip)" >> $GITHUB_STEP_SUMMARY
