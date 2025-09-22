@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LDM Download Manager</title>
+    <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+    <div id="popup-container">
+        <header>
+            <h1>LDM Download Manager</h1>
+            <div id="status-indicator">
+                <span id="connection-status">Connecting...</span>
+            </div>
+        </header>
+
+        <main>
+            <div id="download-form">
+                <input type="url" id="url-input" placeholder="Enter download URL" required>
+                <button id="download-btn">Download</button>
+            </div>
+
+            <div id="downloads-list">
+                <h2>Active Downloads</h2>
+                <div id="downloads-container">
+                    <!-- Downloads will be dynamically added here -->
+                </div>
+            </div>
+
+            <div id="settings-section">
+                <button id="settings-btn">Settings</button>
+                <button id="history-btn">History</button>
+            </div>
+        </main>
+
+        <footer>
+            <p>Right-click links to download with LDM</p>
+        </footer>
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+</html>
