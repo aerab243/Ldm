@@ -50,6 +50,7 @@ public:
         m_updateTimer->start(1000); // Mise à jour chaque seconde
         
         setWindowTitle("Linux Download Manager (LDM)");
+        setWindowIcon(QIcon(":/icons/logo-ldm-opensource.png"));
         setMinimumSize(800, 600);
         resize(1000, 700);
     }
@@ -270,7 +271,7 @@ private:
     {
         if (QSystemTrayIcon::isSystemTrayAvailable()) {
             m_trayIcon = new QSystemTrayIcon(this);
-            m_trayIcon->setIcon(QIcon(":/icons/app.png"));
+            m_trayIcon->setIcon(QIcon(":/icons/logo-ldm-opensource.png"));
             m_trayIcon->setToolTip("Linux Download Manager");
             
             QMenu* trayMenu = new QMenu(this);
@@ -343,6 +344,7 @@ int main(int argc, char *argv[])
     app.setApplicationVersion("1.0.0");
     app.setOrganizationName("LDM");
     app.setOrganizationDomain("github.com/aerab243/ldm");
+    app.setWindowIcon(QIcon(":/icons/logo-ldm-opensource.png"));
     
     // Créer et afficher la fenêtre principale
     SimpleMainWindow window;

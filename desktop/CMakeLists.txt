@@ -155,6 +155,7 @@ target_include_directories(ldm-desktop PRIVATE src ${CMAKE_CURRENT_BINARY_DIR})
 # Simple GUI executable (functional)
 add_executable(ldm-gui-simple
     src/main_simple_gui.cpp
+    ${RESOURCE_FILES}
 )
 target_link_libraries(ldm-gui-simple
     Qt6::Core
@@ -168,6 +169,23 @@ install(TARGETS ldm-desktop ldm-gui-simple
     BUNDLE DESTINATION .
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
+
+# Install desktop file
+install(FILES resources/ldm.desktop
+    DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/applications
+)
+
+# Install application icon
+install(FILES resources/icons/logo-ldm-opensource.png
+    DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/pixmaps
+    RENAME ldm.png
+)
+
+# Install SVG icon for scalable displays
+install(FILES resources/icons/logo-ldm-opensource.svg
+    DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/scalable/apps
+    RENAME ldm.svg
 )
 
 # CLI executable
