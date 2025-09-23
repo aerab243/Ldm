@@ -73,7 +73,7 @@ specs/
 
 # ---- GitHub specific ----
 .github/*
-!.github/workflows/
+.github/workflows/
 
 # ---- Other ----
 *.plist
