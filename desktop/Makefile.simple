@@ -1,0 +1,27 @@
+# Simple Makefile for LDM Complete without resources
+
+CXX = g++
+CXXFLAGS = -std=c++17 -fPIC -O2 $(shell pkg-config --cflags Qt6Core Qt6Widgets Qt6Network Qt6Gui)
+LDFLAGS = $(shell pkg-config --libs Qt6Core Qt6Widgets Qt6Network Qt6Gui)
+MOC = /usr/lib64/qt6/libexec/moc
+
+TARGET = ldm-complete-simple
+SOURCES = src/main_idm_complete.cpp
+OBJECTS = $(SOURCES:.cpp=.o)
+MOC_FILES = src/main_idm_complete.moc
+
+all: $(TARGET)
+
+$(TARGET): $(OBJECTS)
+	$(CXX) $(OBJECTS) -o $(TARGET) $(LDFLAGS)
+
+src/main_idm_complete.moc: src/main_idm_complete.cpp
+	$(MOC) $(CXXFLAGS) src/main_idm_complete.cpp -o src/main_idm_complete.moc
+
+src/main_idm_complete.o: src/main_idm_complete.cpp src/main_idm_complete.moc
+	$(CXX) $(CXXFLAGS) -c src/main_idm_complete.cpp -o src/main_idm_complete.o
+
+clean:
+	rm -f $(OBJECTS) $(MOC_FILES) $(TARGET)
+
+.PHONY: all clean

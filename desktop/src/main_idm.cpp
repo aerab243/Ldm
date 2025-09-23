@@ -423,7 +423,7 @@ private:
     void setupTrayIcon()
     {
         m_trayIcon = new QSystemTrayIcon(this);
-        m_trayIcon->setIcon(QIcon(":/icons/ldm.png"));
+        m_trayIcon->setIcon(QIcon(":/icons/app.png"));
         
         m_trayMenu = new QMenu(this);
         m_trayMenu->addAction("Show", [this]() { show(); activateWindow(); });

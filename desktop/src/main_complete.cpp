@@ -712,7 +712,7 @@ public:
 protected:
     void closeEvent(QCloseEvent *event) override
     {
-        if (m_trayIcon && m_trayIcon->isVisible()) {
+        if (m_trayIcon && QSystemTrayIcon::isSystemTrayAvailable() && m_trayIcon->isVisible()) {
             hide();
             event->ignore();
             m_trayIcon->showMessage("LDM", "Application minimized to tray.", QSystemTrayIcon::Information, 2000);
@@ -1179,7 +1179,13 @@ private:
     
     void setupTrayIcon()
     {
+        if (!QSystemTrayIcon::isSystemTrayAvailable()) {
+            return;
+        }
+        
         m_trayIcon = new QSystemTrayIcon(this);
+        m_trayIcon->setIcon(QIcon(":/icons/app.png"));
+        m_trayIcon->setToolTip("LDM - Like Download Manager");
         
         m_trayMenu = new QMenu(this);
         m_trayMenu->addAction("Show", [this]() { show(); activateWindow(); });
@@ -1188,7 +1194,10 @@ private:
         m_trayMenu->addAction("Exit", this, &QWidget::close);
         
         m_trayIcon->setContextMenu(m_trayMenu);
-        m_trayIcon->show();
+        
+        if (QSystemTrayIcon::isSystemTrayAvailable()) {
+            m_trayIcon->show();
+        }
         
         connect(m_trayIcon, &QSystemTrayIcon::activated,
                 this, &LDMMainWindow::onTrayIconActivated);
@@ -1338,7 +1347,7 @@ private:
     
     void showNotification(const QString &title, const QString &message)
     {
-        if (m_trayIcon) {
+        if (m_trayIcon && QSystemTrayIcon::isSystemTrayAvailable()) {
             m_trayIcon->showMessage(title, message, QSystemTrayIcon::Information, 3000);
         }
     }
