@@ -82,13 +82,13 @@ public:
     
     // Visual customization
     void setLineColor(const QColor &color);
-    QColor lineColor() const { return m_lineColor; }
+    QColor lineColor() const { return m_visual.lineColor; }
     void setGridColor(const QColor &color);
-    QColor gridColor() const { return m_gridColor; }
+    QColor gridColor() const { return m_visual.gridColor; }
     void setBackgroundColor(const QColor &color);
-    QColor backgroundColor() const { return m_backgroundColor; }
+    QColor backgroundColor() const { return m_visual.backgroundColor; }
     void setTextColor(const QColor &color);
-    QColor textColor() const { return m_textColor; }
+    QColor textColor() const { return m_visual.textColor; }
     
     // Grid and labels
     void setShowGrid(bool show);
@@ -344,7 +344,7 @@ private:
     static const int LABEL_SPACING = 20;
     static const int TIME_LABEL_HEIGHT = 20;
     static const int SPEED_LABEL_WIDTH = 50;
-    static const qreal SMOOTH_CURVE_TENSION = 0.3;
+    static constexpr qreal SMOOTH_CURVE_TENSION = 0.3;
     static const int MAX_ZOOM_LEVEL = 5;
     static const int MIN_ZOOM_LEVEL = -3;
     

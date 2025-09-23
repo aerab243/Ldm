@@ -1,0 +1,100 @@
+#!/bin/bash
+
+# Linux Download Manager (LDM) Launcher Script
+# Universal wrapper to launch LDM CLI or GUI from anywhere
+
+# Get script directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+LDM_CLI="$SCRIPT_DIR/desktop/build/ldm-cli"
+LDM_GUI="$SCRIPT_DIR/desktop/build/ldm-gui-simple"
+
+# Function to show help
+show_help() {
+    echo "Linux Download Manager (LDM) Universal Launcher"
+    echo ""
+    echo "Usage: $0 [--gui] [OPTIONS]"
+    echo ""
+    echo "Options:"
+    echo "  --gui              Lancer l'interface graphique"
+    echo "  --cli              Lancer l'interface CLI (par défaut)"
+    echo "  -h, --help         Afficher cette aide"
+    echo "  -v, --version      Afficher la version"
+    echo ""
+    echo "Exemples:"
+    echo "  $0                 # Lancer CLI"
+    echo "  $0 --gui           # Lancer GUI"
+    echo "  $0 --list          # Lister téléchargements (CLI)"
+    echo "  $0 --add URL       # Ajouter téléchargement (CLI)"
+    echo ""
+    echo "Voir aussi:"
+    echo "  ./ldm-gui          # Script GUI avec plus d'options"
+    echo "  ./demo-cli.sh      # Démonstration CLI"
+    echo "  ./demo-gui.sh      # Démonstration GUI"
+}
+
+# Check for GUI option
+LAUNCH_GUI=0
+FILTERED_ARGS=()
+
+for arg in "$@"; do
+    case $arg in
+        --gui)
+            LAUNCH_GUI=1
+            ;;
+        --cli)
+            LAUNCH_GUI=0
+            ;;
+        -h|--help)
+            show_help
+            exit 0
+            ;;
+        -v|--version)
+            if [ $LAUNCH_GUI -eq 1 ] && [ -f "$LDM_GUI" ]; then
+                echo "LDM GUI v1.0.0"
+            else
+                echo "LDM CLI v1.0.0"
+            fi
+            exit 0
+            ;;
+        *)
+            FILTERED_ARGS+=("$arg")
+            ;;
+    esac
+done
+
+# Launch GUI if requested
+if [ $LAUNCH_GUI -eq 1 ]; then
+    # Check if GUI exists
+    if [ ! -f "$LDM_GUI" ]; then
+        echo "Error: LDM GUI not found at $LDM_GUI"
+        echo "Please run ./build.sh first to compile LDM GUI"
+        exit 1
+    fi
+
+    # Check if it's executable
+    if [ ! -x "$LDM_GUI" ]; then
+        echo "Error: LDM GUI is not executable"
+        chmod +x "$LDM_GUI"
+    fi
+
+    # Launch GUI
+    echo "Launching LDM GUI..."
+    exec "$LDM_GUI" "${FILTERED_ARGS[@]}"
+else
+    # Launch CLI (default)
+    # Check if LDM CLI exists
+    if [ ! -f "$LDM_CLI" ]; then
+        echo "Error: LDM CLI not found at $LDM_CLI"
+        echo "Please run ./build.sh first to compile LDM"
+        exit 1
+    fi
+
+    # Check if it's executable
+    if [ ! -x "$LDM_CLI" ]; then
+        echo "Error: LDM CLI is not executable"
+        chmod +x "$LDM_CLI"
+    fi
+
+    # Launch LDM CLI with all provided arguments
+    exec "$LDM_CLI" "${FILTERED_ARGS[@]}"
+fi

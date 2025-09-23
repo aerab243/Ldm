@@ -25,6 +25,9 @@ public:
     explicit SettingsDialog(QWidget *parent = nullptr);
     ~SettingsDialog();
 
+signals:
+    void settingsChanged();
+
 private slots:
     void onSaveClicked();
     void onCancelClicked();

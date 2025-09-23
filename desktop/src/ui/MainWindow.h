@@ -135,7 +135,7 @@ private slots:
 
     // Download Table Events
     void onDownloadSelectionChanged();
-    void onDownloadDoubleClicked(int row, int column);
+    void onDownloadDoubleClicked(int row);
     void onDownloadContextMenu(const QPoint &pos);
     void onDownloadItemChanged(QTableWidgetItem *item);
 

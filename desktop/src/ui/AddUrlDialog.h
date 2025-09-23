@@ -45,6 +45,7 @@
 #include <QDateTime>
 
 // Forward declarations
+class Database;
 class FileTypeDetector;
 class UrlValidator;
 class CategoryManager;
@@ -68,7 +69,7 @@ class AddUrlDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit AddUrlDialog(QWidget *parent = nullptr);
+    explicit AddUrlDialog(Database *database, QWidget *parent = nullptr);
     explicit AddUrlDialog(const QString &url, QWidget *parent = nullptr);
     ~AddUrlDialog();
 
@@ -78,7 +79,7 @@ public:
     void setUrl(const QString &url);
     QString getUrl() const;
     void setFilename(const QString &filename);
-    QString getFilename() const;
+    QString getFileName() const;
     void setSavePath(const QString &path);
     QString getSavePath() const;
     QString getFullFilePath() const;
@@ -86,6 +87,7 @@ public:
     // Category and options
     void setCategory(const QString &category);
     QString getCategory() const;
+    int getCategoryId() const;
     void setStartDownload(bool start);
     bool shouldStartDownload() const;
     void setScheduleDownload(bool schedule);
@@ -174,6 +176,7 @@ private slots:
     void onBrowseSavePathClicked();
     void onOpenFolderClicked();
     void onCategoryChanged();
+    void onBrowseClicked();
     
     // Button actions
     void onOkClicked();
@@ -237,6 +240,8 @@ private:
     QGridLayout *m_fileLayout;
     QLabel *m_filenameLabel;
     QLineEdit *m_filenameEdit;
+    QLineEdit *m_fileNameEdit;
+    QPushButton *m_browseButton;
     QLabel *m_sizeLabel;
     QLabel *m_sizeValue;
     QLabel *m_typeLabel;
@@ -328,6 +333,9 @@ private:
     
     // === DATA MEMBERS ===
     
+    // Database
+    Database *m_database;
+    
     // Network components
     QNetworkAccessManager *m_networkManager;
     QNetworkReply *m_validationReply;
@@ -375,7 +383,8 @@ private:
     void updateValidationStatus(bool isValid, const QString &message = QString());
     void showValidationProgress(bool show);
     bool isValidUrl(const QString &url) const;
-    QString extractFilenameFromUrl(const QString &url) const;
+    QString extractFilenameFromUrl(const QString &url);
+    void loadCategories();
     QString extractFilenameFromHeaders(const QNetworkReply *reply) const;
     QString suggestFilename(const QString &url, const QString &contentType = QString()) const;
     
