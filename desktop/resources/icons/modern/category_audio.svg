@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="audioGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#9c27b0;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#7b1fa2;stop-opacity:1" />
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Headphone band -->
+  <path d="M5 10 C5 6, 8 3, 12 3 C16 3, 19 6, 19 10 L19 14" stroke="url(#audioGradient)" stroke-width="2" fill="none" stroke-linecap="round"/>
+
+  <!-- Left earpiece -->
+  <rect x="3" y="12" width="4" height="6" rx="2" ry="2" fill="url(#audioGradient)" stroke="#6a1b9a" stroke-width="0.5"/>
+  <rect x="4" y="13" width="2" height="4" rx="1" ry="1" fill="#ffffff" opacity="0.3"/>
+
+  <!-- Right earpiece -->
+  <rect x="17" y="12" width="4" height="6" rx="2" ry="2" fill="url(#audioGradient)" stroke="#6a1b9a" stroke-width="0.5"/>
+  <rect x="18" y="13" width="2" height="4" rx="1" ry="1" fill="#ffffff" opacity="0.3"/>
+
+  <!-- Sound waves -->
+  <circle cx="12" cy="11" r="2" stroke="#9c27b0" stroke-width="1" fill="none" opacity="0.7"/>
+  <circle cx="12" cy="11" r="3.5" stroke="#9c27b0" stroke-width="0.8" fill="none" opacity="0.5"/>
+  <circle cx="12" cy="11" r="5" stroke="#9c27b0" stroke-width="0.6" fill="none" opacity="0.3"/>
+
+  <!-- Center music note -->
+  <circle cx="12" cy="11" r="1" fill="#ffffff"/>
+  <path d="M12.5 9 L12.5 13 M12.5 9 L15 8.5 L15 11.5 L12.5 12" stroke="#9c27b0" stroke-width="1" fill="none" stroke-linecap="round"/>
+
+  <!-- Modern accent lines -->
+  <line x1="7" y1="20" x2="17" y2="20" stroke="#9c27b0" stroke-width="1" opacity="0.6"/>
+  <circle cx="9" cy="20" r="0.5" fill="#9c27b0" opacity="0.8"/>
+  <circle cx="15" cy="20" r="0.5" fill="#9c27b0" opacity="0.8"/>
+</svg>

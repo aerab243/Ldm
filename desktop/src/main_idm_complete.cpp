@@ -8,6 +8,7 @@
 #include <QToolBar>
 #include <QMenuBar>
 #include <QStatusBar>
+#include <iostream>
 #include <QGroupBox>
 #include <QLabel>
 #include <QProgressBar>
@@ -109,6 +110,7 @@ private slots:
     void onTrayIconActivated(QSystemTrayIcon::ActivationReason reason);
     void onShowHide();
     void onMinimizeToTray();
+    void setSystemTrayDisabled(bool disabled);
     
     // Timers and updates
     void updateUI();
@@ -211,6 +213,7 @@ private:
     QList<int> m_selectedDownloadIds;
     QString m_lastClipboardText;
     bool m_isMinimizedToTray;
+    bool m_disableSystemTray;
     qint64 m_totalDownloadSpeed;
     qint64 m_totalDownloaded;
     qint64 m_totalSize;
@@ -396,6 +399,7 @@ LDMMainWindow::LDMMainWindow(QWidget *parent)
     , m_tableUpdateTimer(nullptr)
     , m_currentCategory("All Downloads")
     , m_isMinimizedToTray(false)
+    , m_disableSystemTray(false)
     , m_totalDownloadSpeed(0)
     , m_totalDownloaded(0)
     , m_totalSize(0)
@@ -406,7 +410,7 @@ LDMMainWindow::LDMMainWindow(QWidget *parent)
     , m_opacityEffect(nullptr)
 {
     setWindowTitle("LDM - Like Download Manager v1.0.0");
-    setWindowIcon(QIcon(":/icons/ldm.png"));
+    setWindowIcon(QIcon(":/icons/app.png"));
     setMinimumSize(1000, 700);
     resize(1200, 800);
     
@@ -461,9 +465,11 @@ LDMMainWindow::LDMMainWindow(QWidget *parent)
     updateUI();
     updateGlobalStats();
     
-    // Show in system tray if enabled
-    if (QSystemTrayIcon::isSystemTrayAvailable() && m_settings->getBool("UI/MinimizeToTray", true)) {
-        m_trayIcon->show();
+    // Show in system tray if enabled and available
+    if (!m_disableSystemTray && QSystemTrayIcon::isSystemTrayAvailable() && m_settings->getBool("UI/MinimizeToTray", false)) {
+        if (m_trayIcon) {
+            m_trayIcon->show();
+        }
     }
 }
 
@@ -965,13 +971,21 @@ void LDMMainWindow::setupStatusBar()
 
 void LDMMainWindow::setupTrayIcon()
 {
-    if (!QSystemTrayIcon::isSystemTrayAvailable()) {
+    if (m_disableSystemTray || !QSystemTrayIcon::isSystemTrayAvailable()) {
+        qDebug() << "System tray disabled or not available, skipping tray icon setup";
         return;
     }
     
-    m_trayIcon = new QSystemTrayIcon(this);
-    m_trayIcon->setIcon(QIcon(":/icons/ldm.png"));
-    m_trayIcon->setToolTip("LDM - Like Download Manager");
+    try {
+        m_trayIcon = new QSystemTrayIcon(this);
+        
+        // Set icon with fallback
+        QIcon icon(":/icons/app.png");
+        if (icon.isNull()) {
+            icon = style()->standardIcon(QStyle::SP_ComputerIcon);
+        }
+        m_trayIcon->setIcon(icon);
+        m_trayIcon->setToolTip("LDM - Like Download Manager");
     
     // Create tray menu
     m_trayMenu = new QMenu(this);
@@ -999,6 +1013,11 @@ void LDMMainWindow::setupTrayIcon()
     
     connect(m_trayIcon, &QSystemTrayIcon::activated,
             this, &LDMMainWindow::onTrayIconActivated);
+            
+    } catch (const std::exception& e) {
+        qDebug() << "Failed to setup system tray:" << e.what();
+        m_trayIcon = nullptr;
+    }
 }
 
 void LDMMainWindow::setupConnections()
@@ -1821,7 +1840,7 @@ bool LDMMainWindow::isValidUrl(const QString &url)
 
 void LDMMainWindow::showNotification(const QString &title, const QString &message)
 {
-    if (m_trayIcon && m_trayIcon->isVisible()) {
+    if (m_trayIcon && QSystemTrayIcon::isSystemTrayAvailable() && m_trayIcon->isVisible()) {
         m_trayIcon->showMessage(title, message, QSystemTrayIcon::Information, 3000);
     }
 }
@@ -2725,13 +2744,44 @@ int main(int argc, char *argv[])
     app.setOrganizationDomain("github.com/aerab243");
     
     // Set application icon
-    app.setWindowIcon(QIcon(":/icons/ldm.png"));
+    app.setWindowIcon(QIcon(":/icons/app.png"));
+    
+    // Parse command line arguments
+    bool disableSystemTray = false;
+    for (int i = 1; i < argc; ++i) {
+        QString arg = QString(argv[i]);
+        if (arg == "--no-tray" || arg == "--disable-tray") {
+            disableSystemTray = true;
+        } else if (arg == "--version" || arg == "-v") {
+            std::cout << "LDM - Like Download Manager v1.0.0" << std::endl;
+            std::cout << "Developer: Anna-el Gerard RABENANDRASANA (aerab243)" << std::endl;
+            std::cout << "Project: https://github.com/aerab243/ldm" << std::endl;
+            return 0;
+        } else if (arg == "--help" || arg == "-h") {
+            std::cout << "LDM - Like Download Manager v1.0.0" << std::endl;
+            std::cout << "Usage: " << argv[0] << " [options]" << std::endl;
+            std::cout << "Options:" << std::endl;
+            std::cout << "  --version, -v      Show version information" << std::endl;
+            std::cout << "  --help, -h         Show this help message" << std::endl;
+            std::cout << "  --no-tray          Disable system tray icon" << std::endl;
+            std::cout << "  --disable-tray     Disable system tray icon" << std::endl;
+            return 0;
+        }
+    }
     
     // Create and show main window
     LDMMainWindow window;
+    if (disableSystemTray) {
+        window.setSystemTrayDisabled(true);
+    }
     window.show();
     
     return app.exec();
+}
+
+void LDMMainWindow::setSystemTrayDisabled(bool disabled)
+{
+    m_disableSystemTray = disabled;
 }
 
 #include "main_idm_complete.moc"
