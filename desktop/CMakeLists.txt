@@ -120,52 +120,52 @@ qt6_add_translation(QM_FILES ${TS_FILES})
 # Add Qt resources
 qt6_add_resources(RESOURCE_FILES resources/resources.qrc)
 
-# Create executable
-add_executable(ldm-desktop ${SOURCES} ${HEADERS} ${UI_FILES} ${RESOURCE_FILES} ${QM_FILES})
+# Create executable - temporarily disabled due to incomplete implementations
+# add_executable(ldm-desktop ${SOURCES} ${HEADERS} ${UI_FILES} ${RESOURCE_FILES} ${QM_FILES})
 
-# Link libraries - basic components
-target_link_libraries(ldm-desktop
-    Qt6::Core
-    Qt6::Widgets
-    Qt6::Network
-    Qt6::Sql
-    Qt6::Multimedia
-    Qt6::MultimediaWidgets
-    Qt6::Concurrent
-    Qt6::HttpServer
-    ${LIBCURL_LIBRARIES}
-    ${SQLITE3_LIBRARIES}
-    ${FFMPEG_LIBRARIES}
-    ${OPENSSL_LIBRARIES}
-)
+# Link libraries - basic components (disabled)
+# target_link_libraries(ldm-desktop
+#     Qt6::Core
+#     Qt6::Widgets
+#     Qt6::Network
+#     Qt6::Sql
+#     Qt6::Multimedia
+#     Qt6::MultimediaWidgets
+#     Qt6::Concurrent
+#     Qt6::HttpServer
+#     ${LIBCURL_LIBRARIES}
+#     ${SQLITE3_LIBRARIES}
+#     ${FFMPEG_LIBRARIES}
+#     ${OPENSSL_LIBRARIES}
+# )
 
-# Link Qt6Charts if available
-if(Qt6Charts_FOUND)
-    target_link_libraries(ldm-desktop Qt6::Charts)
-    target_compile_definitions(ldm-desktop PRIVATE HAVE_QT6_CHARTS)
-endif()
+# Link Qt6Charts if available (disabled)
+# if(Qt6Charts_FOUND)
+#     target_link_libraries(ldm-desktop Qt6::Charts)
+#     target_compile_definitions(ldm-desktop PRIVATE HAVE_QT6_CHARTS)
+# endif()
 #     ${CLAMAV_LIBRARIES}
 #     7zip
 #     protobuf
 #     webrtc
 
-# Include current directory for headers
-target_include_directories(ldm-desktop PRIVATE src ${CMAKE_CURRENT_BINARY_DIR})
+# Include current directory for headers (disabled)
+# target_include_directories(ldm-desktop PRIVATE src ${CMAKE_CURRENT_BINARY_DIR})
 
-# Simple GUI executable (functional)
-add_executable(ldm-gui-simple
-    src/main_simple_gui.cpp
+# Complete GUI executable (full-featured IDM-style interface)
+add_executable(ldm-complete
+    src/main.cpp
     ${RESOURCE_FILES}
 )
-target_link_libraries(ldm-gui-simple
+target_link_libraries(ldm-complete
     Qt6::Core
     Qt6::Widgets
     Qt6::Network
 )
-target_include_directories(ldm-gui-simple PRIVATE src ${CMAKE_CURRENT_BINARY_DIR})
+target_include_directories(ldm-complete PRIVATE src ${CMAKE_CURRENT_BINARY_DIR})
 
 # Install
-install(TARGETS ldm-desktop ldm-gui-simple
+install(TARGETS ldm-complete
     BUNDLE DESTINATION .
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}

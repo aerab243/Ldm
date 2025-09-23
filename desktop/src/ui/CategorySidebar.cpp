@@ -108,3 +108,44 @@ void CategorySidebar::updateCategoryCount(const QString &category, int count)
         }
     }
 }
+
+// Stub implementations for missing methods
+void CategorySidebar::addCustomCategory(const QString &, const QIcon &) { /* stub */ }
+void CategorySidebar::removeCustomCategory(const QString &) { /* stub */ }
+void CategorySidebar::renameCategory(const QString &, const QString &) { /* stub */ }
+QStringList CategorySidebar::getCustomCategories() const { return QStringList(); }
+void CategorySidebar::setSearchText(const QString &) { /* stub */ }
+QString CategorySidebar::getSearchText() const { return QString(); }
+void CategorySidebar::clearSearch() { /* stub */ }
+void CategorySidebar::saveSettings() { /* stub */ }
+void CategorySidebar::loadSettings() { /* stub */ }
+void CategorySidebar::resetToDefaults() { /* stub */ }
+void CategorySidebar::contextMenuEvent(QContextMenuEvent *) { /* stub */ }
+void CategorySidebar::paintEvent(QPaintEvent *) { /* stub */ }
+void CategorySidebar::resizeEvent(QResizeEvent *) { /* stub */ }
+
+// Slot stubs
+void CategorySidebar::onCategorySelectionChanged() { /* stub */ }
+void CategorySidebar::onCategoryDoubleClicked(QTreeWidgetItem *, int) { /* stub */ }
+void CategorySidebar::onSearchTextChanged(const QString &) { /* stub */ }
+void CategorySidebar::onSearchClearClicked() { /* stub */ }
+void CategorySidebar::onUpdateTimer() { /* stub */ }
+void CategorySidebar::onAddCustomCategory() { /* stub */ }
+void CategorySidebar::onRenameCategory() { /* stub */ }
+void CategorySidebar::onRemoveCategory() { /* stub */ }
+void CategorySidebar::onSetCategoryIcon() { /* stub */ }
+void CategorySidebar::onCategorySeparator() { /* stub */ }
+void CategorySidebar::onExpandAll() { /* stub */ }
+void CategorySidebar::onCollapseAll() { /* stub */ }
+void CategorySidebar::onResetCategories() { /* stub */ }
+
+// Constants
+const QString CategorySidebar::CATEGORY_ALL = "all";
+const QString CategorySidebar::CATEGORY_DOWNLOADING = "downloading";
+const QString CategorySidebar::CATEGORY_COMPLETED = "completed";
+const QString CategorySidebar::CATEGORY_UNFINISHED = "unfinished";
+const QString CategorySidebar::CATEGORY_VIDEO = "video";
+const QString CategorySidebar::CATEGORY_AUDIO = "audio";
+const QString CategorySidebar::CATEGORY_DOCUMENTS = "documents";
+const QString CategorySidebar::CATEGORY_COMPRESSED = "compressed";
+const QString CategorySidebar::CATEGORY_PROGRAMS = "programs";

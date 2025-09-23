@@ -1,338 +1,180 @@
 #!/bin/bash
 
-# LDM - Linux Download Manager Uninstall Script
-# Comprehensive removal of LDM installation and configuration files
-# Developer: Anna-el Gerard RABENANDRASANA (aerab243)
-# Project: https://github.com/aerab243/ldm
+# LDM Uninstall Script for Linux
+# This script removes all installed LDM files and cleans up the system
 
-set -e
+set -e  # Exit on any error
 
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
-BLUE='\033[0;34m'
-CYAN='\033[0;36m'
 YELLOW='\033[1;33m'
-WHITE='\033[1;37m'
+BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-echo "=============================================="
-echo -e "${RED}LDM - Linux Download Manager Uninstaller${NC}"
-echo "=============================================="
-echo
-echo -e "${YELLOW}This will completely remove LDM from your system.${NC}"
-echo
+# Function to print colored output
+print_status() {
+    echo -e "${BLUE}[INFO]${NC} $1"
+}
 
-# Function to ask user confirmation
-ask_confirmation() {
-    echo -e "${CYAN}$1${NC}"
-    read -p "Continue? (y/N): " -n 1 -r
+print_success() {
+    echo -e "${GREEN}[SUCCESS]${NC} $1"
+}
+
+print_warning() {
+    echo -e "${YELLOW}[WARNING]${NC} $1"
+}
+
+print_error() {
+    echo -e "${RED}[ERROR]${NC} $1"
+}
+
+# Function to check if running with sudo
+check_sudo() {
+    if [ "$EUID" -ne 0 ]; then
+        print_error "This script must be run with sudo privileges"
+        echo "Usage: sudo $0"
+        exit 1
+    fi
+}
+
+# Function to confirm uninstall
+confirm_uninstall() {
+    print_warning "This will completely remove LDM from your system."
+    echo "The following will be removed:"
+    echo "  - LDM executables from /usr/local/bin/"
+    echo "  - Desktop file from /usr/local/share/applications/"
+    echo "  - Icons from /usr/local/share/pixmaps/ and /usr/local/share/icons/"
+    echo "  - Configuration files from ~/.config/LDM/"
+    echo "  - Download history and settings"
+    echo ""
+    read -p "Are you sure you want to continue? (y/N): " -n 1 -r
     echo
     if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        echo -e "${YELLOW}Operation cancelled.${NC}"
+        print_status "Uninstall cancelled."
         exit 0
     fi
 }
 
-# Function to remove file/directory with confirmation
-remove_path() {
-    local path="$1"
-    local description="$2"
+# Function to remove installed files
+remove_installed_files() {
+    print_status "Removing installed LDM files..."
 
-    if [ -e "$path" ]; then
-        echo -e "${CYAN}Removing $description...${NC}"
-        echo "  Path: $path"
+    # Remove executables
+    rm -f /usr/local/bin/ldm-complete
+    rm -f /usr/local/bin/ldm-gui-simple
+    rm -f /usr/local/bin/ldm-cli
+    rm -f /usr/local/bin/ldm-native-host
 
-        if [ -d "$path" ]; then
-            rm -rf "$path"
-        else
-            rm -f "$path"
-        fi
+    # Remove desktop file
+    rm -f /usr/local/share/applications/ldm.desktop
 
-        if [ ! -e "$path" ]; then
-            echo -e "${GREEN}✓ Removed successfully${NC}"
-        else
-            echo -e "${RED}✗ Failed to remove${NC}"
-        fi
-        echo
+    # Remove icons
+    rm -f /usr/local/share/pixmaps/ldm.png
+    rm -f /usr/local/share/icons/hicolor/scalable/apps/ldm.svg
+
+    print_success "Installed files removed"
+}
+
+# Function to remove user configuration
+remove_user_config() {
+    print_status "Removing user configuration files..."
+
+    local config_dir="$HOME/.config/LDM"
+    if [ -d "$config_dir" ]; then
+        rm -rf "$config_dir"
+        print_success "Configuration directory removed: $config_dir"
     else
-        echo -e "${YELLOW}⚠ $description not found${NC}"
-        echo "  Path: $path"
-        echo
+        print_status "No configuration directory found"
+    fi
+
+    # Also check for any other potential locations
+    local cache_dir="$HOME/.cache/LDM"
+    if [ -d "$cache_dir" ]; then
+        rm -rf "$cache_dir"
+        print_success "Cache directory removed: $cache_dir"
+    fi
+
+    local data_dir="$HOME/.local/share/LDM"
+    if [ -d "$data_dir" ]; then
+        rm -rf "$data_dir"
+        print_success "Data directory removed: $data_dir"
     fi
 }
 
-# Show what will be removed
-echo -e "${WHITE}What will be removed:${NC}"
-echo "• LDM executables and binaries"
-echo "• Desktop application files"
-echo "• System installation files (/usr/local/bin/, /usr/bin/)"
-echo "• User configuration files (~/.config/LDM/)"
-echo "• User data files (~/.local/share/LDM/)"
-echo "• Desktop entries and shortcuts"
-echo "• Cache and temporary files"
-echo "• Browser integration files"
-echo "• System service files"
-echo
+# Function to clean up desktop integration
+cleanup_desktop_integration() {
+    print_status "Cleaning up desktop integration..."
 
-ask_confirmation "Do you want to proceed with uninstallation?"
-
-echo -e "${BLUE}Starting LDM uninstallation...${NC}"
-echo
-
-# 1. Remove local build files and executables
-echo -e "${WHITE}=== Removing Local Build Files ===${NC}"
-
-if [ -d "desktop" ]; then
-    echo -e "${CYAN}Removing desktop build files...${NC}"
-
-    # Remove executables
-    rm -f desktop/ldm-working
-    rm -f desktop/ldm-cli
-    rm -f desktop/ldm-complete*
-    rm -f desktop/ldm-idm*
-    rm -f desktop/test_*
-    rm -f desktop/quick_*
-    rm -f desktop/*.o
-    rm -f desktop/*.moc
-    rm -f desktop/qrc_*
-    rm -f desktop/build.log
-    rm -f desktop/test*.log
-
-    # Remove build directories
-    rm -rf desktop/build
-    rm -rf desktop/CMakeFiles
-
-    echo -e "${GREEN}✓ Local build files removed${NC}"
-else
-    echo -e "${YELLOW}⚠ Desktop directory not found${NC}"
-fi
-
-echo
-
-# 2. Remove system-wide installations
-echo -e "${WHITE}=== Removing System Installations ===${NC}"
-
-# Check for system installations
-SYSTEM_LOCATIONS=(
-    "/usr/local/bin/ldm"
-    "/usr/local/bin/ldm-cli"
-    "/usr/local/bin/ldm-desktop"
-    "/usr/local/bin/ldm-working"
-    "/usr/bin/ldm"
-    "/usr/bin/ldm-cli"
-    "/usr/bin/ldm-desktop"
-    "/opt/ldm"
-    "/usr/share/applications/ldm.desktop"
-    "/usr/share/applications/ldm-desktop.desktop"
-    "/usr/local/share/applications/ldm.desktop"
-    "/usr/share/pixmaps/ldm.png"
-    "/usr/share/icons/hicolor/*/apps/ldm.png"
-    "/usr/local/share/pixmaps/ldm.png"
-)
-
-SYSTEM_FOUND=false
-for location in "${SYSTEM_LOCATIONS[@]}"; do
-    if [ -e "$location" ] || [ -L "$location" ]; then
-        SYSTEM_FOUND=true
-        break
+    # Remove from application menu (if using update-desktop-database)
+    if command -v update-desktop-database &> /dev/null; then
+        update-desktop-database /usr/local/share/applications/ 2>/dev/null || true
     fi
-done
 
-if [ "$SYSTEM_FOUND" = true ]; then
-    echo -e "${YELLOW}System-wide installation detected. Root privileges required.${NC}"
-
-    if command -v sudo >/dev/null 2>&1; then
-        ask_confirmation "Remove system-wide files with sudo?"
-
-        echo -e "${CYAN}Removing system executables...${NC}"
-        sudo rm -f /usr/local/bin/ldm* /usr/bin/ldm*
-
-        echo -e "${CYAN}Removing desktop entries...${NC}"
-        sudo rm -f /usr/share/applications/ldm*.desktop
-        sudo rm -f /usr/local/share/applications/ldm*.desktop
-
-        echo -e "${CYAN}Removing icons...${NC}"
-        sudo rm -f /usr/share/pixmaps/ldm*
-        sudo rm -f /usr/local/share/pixmaps/ldm*
-        sudo rm -rf /usr/share/icons/hicolor/*/apps/ldm*
-
-        echo -e "${CYAN}Removing system directories...${NC}"
-        sudo rm -rf /opt/ldm
-
-        echo -e "${GREEN}✓ System installation removed${NC}"
-    else
-        echo -e "${RED}✗ sudo not available. Please remove system files manually as root:${NC}"
-        echo "  rm -f /usr/local/bin/ldm* /usr/bin/ldm*"
-        echo "  rm -f /usr/share/applications/ldm*.desktop"
-        echo "  rm -f /usr/share/pixmaps/ldm*"
-        echo "  rm -rf /opt/ldm"
+    # Remove from icon cache (if using gtk-update-icon-cache)
+    if command -v gtk-update-icon-cache &> /dev/null; then
+        gtk-update-icon-cache /usr/local/share/icons/hicolor/ 2>/dev/null || true
     fi
-else
-    echo -e "${GREEN}✓ No system-wide installation found${NC}"
-fi
 
-echo
+    print_success "Desktop integration cleaned up"
+}
 
-# 3. Remove user configuration and data
-echo -e "${WHITE}=== Removing User Data ===${NC}"
+# Function to check for remaining files
+check_remaining_files() {
+    print_status "Checking for any remaining LDM files..."
 
-remove_path "$HOME/.config/LDM" "user configuration files"
-remove_path "$HOME/.config/ldm" "user configuration files (lowercase)"
-remove_path "$HOME/.local/share/LDM" "user data files"
-remove_path "$HOME/.local/share/ldm" "user data files (lowercase)"
-remove_path "$HOME/.cache/LDM" "user cache files"
-remove_path "$HOME/.cache/ldm" "user cache files (lowercase)"
+    local found_files=false
 
-# Remove Qt settings
-if [ -f "$HOME/.config/aerab243/LDM.conf" ]; then
-    remove_path "$HOME/.config/aerab243/LDM.conf" "Qt settings file"
-fi
-
-# Remove desktop shortcuts
-remove_path "$HOME/.local/share/applications/ldm.desktop" "user desktop entry"
-remove_path "$HOME/Desktop/LDM.desktop" "desktop shortcut"
-
-# 4. Remove browser integration
-echo -e "${WHITE}=== Removing Browser Integration ===${NC}"
-
-# Chrome/Chromium native messaging
-CHROME_LOCATIONS=(
-    "$HOME/.config/google-chrome/NativeMessagingHosts/com.aerab243.ldm.json"
-    "$HOME/.config/chromium/NativeMessagingHosts/com.aerab243.ldm.json"
-    "/etc/chromium/native-messaging-hosts/com.aerab243.ldm.json"
-    "/etc/opt/chrome/native-messaging-hosts/com.aerab243.ldm.json"
-)
-
-for location in "${CHROME_LOCATIONS[@]}"; do
-    if [ -f "$location" ]; then
-        remove_path "$location" "Chrome/Chromium native messaging host"
+    # Check for executables
+    if [ -f /usr/local/bin/ldm-complete ] || [ -f /usr/local/bin/ldm-gui-simple ] || [ -f /usr/local/bin/ldm-cli ]; then
+        print_warning "Some LDM executables may still exist"
+        found_files=true
     fi
-done
 
-# Firefox native messaging
-FIREFOX_LOCATIONS=(
-    "$HOME/.mozilla/native-messaging-hosts/ldm.json"
-    "/usr/lib/mozilla/native-messaging-hosts/ldm.json"
-    "/usr/lib64/mozilla/native-messaging-hosts/ldm.json"
-)
-
-for location in "${FIREFOX_LOCATIONS[@]}"; do
-    if [ -f "$location" ]; then
-        remove_path "$location" "Firefox native messaging host"
+    # Check for desktop file
+    if [ -f /usr/local/share/applications/ldm.desktop ]; then
+        print_warning "Desktop file may still exist"
+        found_files=true
     fi
-done
 
-# 5. Remove systemd services
-echo -e "${WHITE}=== Removing System Services ===${NC}"
-
-if systemctl --user list-unit-files | grep -q ldm; then
-    echo -e "${CYAN}Stopping and removing user services...${NC}"
-    systemctl --user stop ldm* 2>/dev/null || true
-    systemctl --user disable ldm* 2>/dev/null || true
-    rm -f "$HOME/.config/systemd/user/ldm*"
-    systemctl --user daemon-reload
-    echo -e "${GREEN}✓ User services removed${NC}"
-fi
-
-if [ -f "/etc/systemd/system/ldm.service" ]; then
-    echo -e "${YELLOW}System service detected. Root privileges required.${NC}"
-    if command -v sudo >/dev/null 2>&1; then
-        ask_confirmation "Remove system service?"
-        sudo systemctl stop ldm 2>/dev/null || true
-        sudo systemctl disable ldm 2>/dev/null || true
-        sudo rm -f /etc/systemd/system/ldm*
-        sudo systemctl daemon-reload
-        echo -e "${GREEN}✓ System service removed${NC}"
+    # Check for icons
+    if [ -f /usr/local/share/pixmaps/ldm.png ] || [ -f /usr/local/share/icons/hicolor/scalable/apps/ldm.svg ]; then
+        print_warning "Some icons may still exist"
+        found_files=true
     fi
-fi
 
-echo
+    if [ "$found_files" = false ]; then
+        print_success "No remaining LDM files found"
+    fi
+}
 
-# 6. Clean package manager traces (if installed via package)
-echo -e "${WHITE}=== Checking Package Manager ===${NC}"
+# Main uninstall process
+main() {
+    print_status "Starting LDM uninstallation..."
 
-# Check for RPM package
-if command -v rpm >/dev/null 2>&1 && rpm -q ldm >/dev/null 2>&1; then
-    echo -e "${YELLOW}LDM RPM package detected.${NC}"
-    ask_confirmation "Remove RPM package?"
-    sudo rpm -e ldm
-    echo -e "${GREEN}✓ RPM package removed${NC}"
-# Check for DEB package
-elif command -v dpkg >/dev/null 2>&1 && dpkg -l | grep -q ldm; then
-    echo -e "${YELLOW}LDM DEB package detected.${NC}"
-    ask_confirmation "Remove DEB package?"
-    sudo apt remove --purge ldm
-    echo -e "${GREEN}✓ DEB package removed${NC}"
-else
-    echo -e "${GREEN}✓ No package manager installation found${NC}"
-fi
+    # Check sudo
+    check_sudo
 
-echo
+    # Confirm uninstall
+    confirm_uninstall
 
-# 7. Remove temporary files and logs
-echo -e "${WHITE}=== Cleaning Temporary Files ===${NC}"
+    # Remove installed files
+    remove_installed_files
 
-remove_path "/tmp/ldm*" "temporary files"
-remove_path "/var/log/ldm*" "system log files"
-remove_path "$HOME/.local/share/recently-used.xbel.ldm*" "recent files traces"
+    # Remove user configuration
+    remove_user_config
 
-echo
+    # Clean up desktop integration
+    cleanup_desktop_integration
 
-# 8. Update desktop database
-echo -e "${WHITE}=== Updating Desktop Database ===${NC}"
+    # Check for remaining files
+    check_remaining_files
 
-if command -v update-desktop-database >/dev/null 2>&1; then
-    echo -e "${CYAN}Updating desktop database...${NC}"
-    update-desktop-database "$HOME/.local/share/applications/" 2>/dev/null || true
-    echo -e "${GREEN}✓ Desktop database updated${NC}"
-fi
+    print_success "LDM uninstallation completed!"
+    echo ""
+    echo "LDM has been completely removed from your system."
+    echo "If you want to reinstall LDM later, you can run the install.sh script again."
+}
 
-if command -v gtk-update-icon-cache >/dev/null 2>&1; then
-    echo -e "${CYAN}Updating icon cache...${NC}"
-    gtk-update-icon-cache "$HOME/.local/share/icons/" 2>/dev/null || true
-    echo -e "${GREEN}✓ Icon cache updated${NC}"
-fi
-
-echo
-
-# 9. Summary
-echo "=============================================="
-echo -e "${GREEN}LDM Uninstallation Complete${NC}"
-echo "=============================================="
-echo
-
-echo -e "${WHITE}Removed components:${NC}"
-echo "✓ Local executables and build files"
-echo "✓ User configuration and data files"
-echo "✓ Desktop entries and shortcuts"
-echo "✓ Browser integration files"
-echo "✓ Cache and temporary files"
-echo "✓ System services (if present)"
-echo "✓ Package manager installation (if present)"
-
-echo
-echo -e "${WHITE}What was NOT removed:${NC}"
-echo "• Downloaded files in ~/Downloads/"
-echo "• User-created download directories"
-echo "• System packages (Qt6, build tools, etc.)"
-echo "• Browser extensions (remove manually)"
-
-echo
-echo -e "${CYAN}Manual cleanup (if needed):${NC}"
-echo "• Remove browser extensions manually"
-echo "• Clear browser download history"
-echo "• Remove any custom download directories"
-
-echo
-echo -e "${YELLOW}To completely remove all traces:${NC}"
-echo "• Clear browser cache and cookies"
-echo "• Check for any remaining files: find /home /opt /usr -name '*ldm*' 2>/dev/null"
-
-echo
-echo -e "${BLUE}Thank you for using LDM - Linux Download Manager!${NC}"
-echo -e "${BLUE}Developer: Anna-el Gerard RABENANDRASANA (aerab243)${NC}"
-echo -e "${BLUE}Project: https://github.com/aerab243/ldm${NC}"
-echo
-
-echo -e "${GREEN}Uninstallation completed successfully.${NC}"
+# Run main function
+main "$@"

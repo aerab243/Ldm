@@ -1,6 +1,6 @@
 # LDM - Like Download Manager
 
-[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/aerab243/ldm)
+[![Version](https://img.shields.io/badge/version-1.0.1-blue.svg)](https://github.com/aerab243/ldm)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Qt](https://img.shields.io/badge/Qt-6.5+-red.svg)](https://qt.io)
 [![C++](https://img.shields.io/badge/C++-20-orange.svg)](https://isocpp.org)
@@ -20,90 +20,107 @@
 - **📁 Smart Organization**: Auto-categorize downloads by file type
 - **🔗 URL Detection**: Automatic filename extraction from URLs
 
-### 🎨 IDM-Style Interface
-- **🖥️ Familiar Design**: Interface inspired by Internet Download Manager
-- **📋 Complete Toolbar**: Add URL, Resume, Stop, Delete, Options, and more
-- **📂 Category Panel**: Organize downloads (Music, Video, Documents, etc.)
-- **📈 Detailed Progress**: Real-time transfer rates and ETA calculations
+### 🎨 Clean, Modern Interface
+- **🖥️ IDM-Inspired Design**: Familiar interface with modern Qt6 styling
+- **📋 Intuitive Toolbar**: Add URL, Resume, Stop, Delete, and Options buttons
+- **📂 Category Panel**: Organize downloads (Compressed, Documents, Music, Video, Programs)
+- **📈 Live Statistics**: Real-time transfer rates, progress bars, and ETA
 - **💾 Download History**: Track completed and failed downloads
-- **🔍 Search & Filter**: Find downloads quickly
+- **🔍 Clean Start**: Interface launches empty, ready for your downloads
 
-### 🛠️ Advanced Features
-- **⏰ Download Scheduler**: Queue downloads for specific times
-- **🎯 Queue Management**: Organize downloads with priorities
-- **🕷️ Link Grabber**: Extract downloadable links from web pages
-- **⚙️ Customizable Settings**: Configure connections, paths, and behavior
-- **🔔 System Notifications**: Desktop alerts for completed downloads
-- **📱 System Tray**: Minimize to tray with quick access menu
+### 🛠️ Available Components
+- **🖼️ GUI Application**: `ldm-complete` - Full-featured graphical interface
+- **💻 CLI Tool**: `ldm-cli` - Command-line interface for automation
+- **🌐 Browser Integration**: `ldm-native-host` - Native messaging for browser extensions
+- **📦 Automated Installer**: Cross-platform installation scripts
+- **🧹 Maintenance Tools**: Clean, uninstall, and update scripts
 
 ### 🔧 Technical Features
 - **🏗️ Modern C++20**: Latest language standards and best practices
-- **🎨 Qt 6 Framework**: Cross-platform native GUI
+- **🎨 Qt 6 Framework**: Cross-platform native GUI with modern APIs
 - **🌐 libcurl Integration**: Reliable HTTP/HTTPS download engine
 - **🔒 OpenSSL Support**: Secure connections and encryption
 - **📊 SQLite Database**: Efficient download history storage
-- **🚀 Multi-threading**: Concurrent downloads and UI responsiveness
+- **🚀 CMake Build System**: Modern, cross-platform build configuration
+- **📦 Automated Installation**: One-command install for all Linux distributions
+- **🧹 Clean Architecture**: Single main.cpp with organized modular structure
 
 ## 📦 Quick Start
 
-### 🐧 Linux (Ubuntu/Debian)
+### 🚀 Automated Installation (Recommended)
+
+LDM provides automated installation scripts that work on all major Linux distributions:
 
 ```bash
-# Install dependencies
+# Clone the repository
+git clone https://github.com/aerab243/ldm.git
+cd ldm
+
+# Run the automated installer (detects your Linux distribution automatically)
+./install.sh
+
+# Launch LDM
+ldm-complete
+```
+
+The installer automatically:
+- ✅ Detects your Linux distribution (Ubuntu, Fedora, Arch, openSUSE, etc.)
+- ✅ Installs all required dependencies
+- ✅ Builds LDM using CMake
+- ✅ Installs system-wide with desktop integration
+
+### 🐧 Manual Installation (Alternative)
+
+If you prefer manual installation:
+
+#### Ubuntu/Debian
+```bash
 sudo apt update
-sudo apt install build-essential qt6-base-dev qt6-tools-dev cmake
-sudo apt install libcurl4-openssl-dev libssl-dev
+sudo apt install build-essential cmake qt6-base-dev qt6-tools-dev \
+                 libcurl4-openssl-dev libssl-dev libsqlite3-dev
 
-# Clone and build
 git clone https://github.com/aerab243/ldm.git
-cd ldm/desktop
-make -f Makefile.complete
-./ldm-complete
+cd ldm
+mkdir build && cd build
+cmake ..
+make -j$(nproc)
+sudo make install
 ```
 
-### 🎯 Fedora/RHEL
-
+#### Fedora/RHEL
 ```bash
-# Install dependencies
-sudo dnf install gcc-c++ make qt6-qtbase-devel qt6-qttools-devel
-sudo dnf install libcurl-devel openssl-devel
+sudo dnf install gcc-c++ cmake qt6-qtbase-devel qt6-qttools-devel \
+                libcurl-devel openssl-devel sqlite-devel
 
-# Clone and build
 git clone https://github.com/aerab243/ldm.git
-cd ldm/desktop
-make -f Makefile.complete
-./ldm-complete
+cd ldm
+mkdir build && cd build
+cmake ..
+make -j$(nproc)
+sudo make install
 ```
 
-### 🏗️ Arch Linux
-
+#### Arch Linux
 ```bash
-# Install dependencies
-sudo pacman -S gcc make qt6-base qt6-tools curl openssl
+sudo pacman -S gcc cmake qt6-base qt6-tools curl openssl sqlite
 
-# Clone and build
 git clone https://github.com/aerab243/ldm.git
-cd ldm/desktop
-make -f Makefile.complete
-./ldm-complete
-```
-
-### 🛠️ Auto-Setup
-
-```bash
-git clone https://github.com/aerab243/ldm.git
-cd ldm/desktop
-make -f Makefile.complete setup  # Auto-detects distro and installs deps
+cd ldm
+mkdir build && cd build
+cmake ..
+make -j$(nproc)
+sudo make install
 ```
 
 ## 📖 Usage Guide
 
 ### 🚀 Getting Started
 
-1. **Launch LDM**: Run `./ldm-complete` or install with `make install`
-2. **Add Downloads**: Click "Add URL" or press `Ctrl+N`
-3. **Configure Settings**: Access via "Options" for customization
-4. **Manage Downloads**: Use toolbar buttons for control
+1. **Launch LDM**: Run `ldm-complete` - starts with a clean, empty interface ready for your downloads
+2. **Add Your First Download**: Click "Add URL" or press `Ctrl+N` to begin downloading
+3. **Configure Settings**: Access via "Options" menu for paths, connections, and preferences
+4. **Manage Downloads**: Use toolbar buttons for resume, pause, stop, and delete operations
+5. **Monitor Progress**: View real-time statistics in the status bar and download details panel
 
 ### 💡 Key Features
 
@@ -154,106 +171,141 @@ Tools → Link Grabber
 
 ### 🔧 Settings Overview
 
+LDM uses Qt's standard settings system for configuration. Settings are automatically saved and restored between sessions.
+
 #### 📁 General Settings
-- **Download Directory**: Default save location
-- **Max Connections**: Number of simultaneous connections per download
-- **Auto-start**: Begin downloads immediately after adding
+- **Download Directory**: Configurable default save location (set via Options dialog)
+- **Interface Language**: Automatic system language detection
+- **Window Geometry**: Remembers window size and position
 
 #### 🌐 Network Settings
-- **Speed Limit**: Bandwidth throttling (KB/s)
-- **Timeout**: Connection timeout duration
-- **Proxy Support**: HTTP/SOCKS proxy configuration
+- **Connection Timeout**: Configurable timeout for network operations
+- **User Agent**: Customizable browser identification string
+- **SSL/TLS Verification**: Secure connection validation
 
 #### 🎨 Interface Settings
-- **Theme**: Light, Dark, or Classic IDM styling
-- **Notifications**: Desktop alerts for events
-- **Tray Integration**: Minimize to system tray
+- **Qt6 Theme**: Follows system theme with IDM-inspired styling
+- **System Tray**: Minimizable to tray with notifications
+- **Clean Startup**: Interface launches empty, no demo data
 
 ### 📝 Configuration Files
 
+LDM stores configuration using Qt's standard locations:
+
 ```
-~/.config/LDM/
-├── settings.conf       # Main configuration
-├── downloads.db        # Download history
-└── categories.conf     # Custom categories
+~/.config/aerab243/LDM.conf          # Main application settings
+~/.local/share/LDM/                   # Application data directory
+├── downloads.db                      # SQLite database for download history
+├── logs/                             # Application log files
+└── cache/                            # Temporary cache files
 ```
+
+**Note**: Configuration files are created automatically on first run. No manual setup required.
 
 ## 🏗️ Building from Source
 
 ### 📋 Prerequisites
 
 **Required Dependencies:**
-- Qt 6.5+ (Core, Widgets, Network)
-- C++20 compatible compiler (GCC 10+, Clang 12+)
-- libcurl 7.60+
-- OpenSSL 1.1+
-- CMake 3.20+ (optional)
+- **Qt 6.2+** (Core, Widgets, Network, Sql, HttpServer, Concurrent)
+- **C++20 compatible compiler** (GCC 11+, Clang 13+)
+- **libcurl 7.60+** - HTTP/HTTPS client library
+- **SQLite 3.0+** - Database storage
+- **FFmpeg** (libavcodec, libavformat, libavutil, libswscale) - Media processing
+- **OpenSSL 1.1+** - SSL/TLS encryption
+- **CMake 3.16+** - Build system
+
+**Optional Dependencies:**
+- **Qt6 Charts** - Enhanced statistics visualization
 
 **Development Tools:**
-- MOC (Meta-Object Compiler)
-- pkg-config
-- make
+- **pkg-config** - Library detection
+- **make** - Build automation
+- **Qt6 MOC** (automatically handled by CMake)
 
 ### 🔨 Build Options
 
-#### 🚀 Quick Build (Makefile)
+#### 🚀 CMake Build (Recommended)
 ```bash
-cd ldm/desktop
-make -f Makefile.complete          # Release build
-make -f Makefile.complete debug    # Debug build
-make -f Makefile.complete test     # Run tests
-```
-
-#### 🏗️ CMake Build
-```bash
-cd ldm/desktop
+cd ldm
 mkdir build && cd build
-cmake -DCMAKE_BUILD_TYPE=Release ..
+cmake -DCMAKE_BUILD_TYPE=Release ..    # Release build
+cmake -DCMAKE_BUILD_TYPE=Debug ..      # Debug build
 make -j$(nproc)
+
+# Run tests
+ctest
 ```
 
-#### 🎯 IDM-Style Interface Only
+#### 🛠️ Automated Build Scripts
 ```bash
-cd ldm/desktop
-make -f Makefile.idm               # Lightweight UI demo
+cd ldm
+
+# Full automated build and install
+./install.sh
+
+# Clean build artifacts
+./clean.sh
 ```
 
 ### 📦 Installation
 
+#### Automated Installation (Recommended)
+```bash
+# Install system-wide
+./install.sh
+
+# Uninstall completely
+sudo ./uninstall.sh
+```
+
+#### Manual Installation
 ```bash
 # System-wide installation
-sudo make -f Makefile.complete install
-
-# Package creation
-make -f Makefile.complete package
+sudo make install
 
 # Uninstall
-sudo make -f Makefile.complete uninstall
+sudo make uninstall
 ```
 
 ## 🏗️ Project Structure
 
 ```
 ldm/
-├── desktop/                    # Main application
+├── desktop/                    # Main GUI application
 │   ├── src/
-│   │   ├── main_complete.cpp  # Complete application
-│   │   ├── main_idm.cpp       # IDM-style interface demo
-│   │   ├── core/              # Download engine
+│   │   ├── main.cpp           # Main application entry point
+│   │   ├── core/              # Download engine core
+│   │   │   ├── DownloadEngine.cpp    # Main download controller
+│   │   │   ├── DownloadItem.cpp      # Download item model
+│   │   │   ├── NetworkManager.cpp    # HTTP/HTTPS handling
+│   │   │   ├── Database.cpp          # SQLite storage
+│   │   │   └── ...
 │   │   ├── ui/                # User interface components
+│   │   │   ├── MainWindow.cpp        # Main application window
+│   │   │   ├── AddUrlDialog.cpp      # URL input dialog
+│   │   │   ├── DownloadTableWidget.cpp # Downloads table
+│   │   │   └── ...
 │   │   ├── api/               # REST API server
+│   │   ├── cli/               # Command-line interface
 │   │   └── utils/             # Utility functions
-│   ├── resources/             # Icons and assets
-│   ├── tests/                 # Unit tests
-│   └── Makefile.*             # Build configurations
-├── browser-extension/          # Web browser integration
-├── native-messaging/          # Browser communication
-├── docs/                      # Documentation
+│   ├── resources/             # Icons, UI resources, translations
+│   ├── tests/                 # Unit and integration tests
+│   └── CMakeLists.txt         # CMake build configuration
+├── browser-extension/          # Web browser integration (planned)
+├── native-messaging/          # Browser communication host
+├── docs/                      # Documentation and images
 ├── scripts/                   # Utility scripts
-└── installer/                 # Installation packages
+├── installer/                 # Installation packages
+├── install.sh                 # Automated installer script
+├── uninstall.sh               # Automated uninstaller script
+├── clean.sh                   # Build cleanup script
+└── README.md                  # This file
 ```
 
 ## 🎮 Interface Overview
+
+LDM provides a clean, modern interface that starts empty and ready for your downloads:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -261,24 +313,32 @@ ldm/
 ├─────────────────────────────────────────────────────────────┤
 │ [Add URL] [Resume] [Stop] [Delete] │ [Options] [Scheduler]  │
 ├───────────────┬─────────────────────────────────────────────┤
-│ 📁 Categories │ Downloads Table                             │
+│ 📁 Categories │ Downloads Table (Empty on first launch)    │
 │ 📦 Compressed │ ┌─────────────────────────────────────────┐ │
-│ 📄 Documents  │ │File Name │Size │Status │Speed │Progress│ │
-│ 🎵 Music      │ ├─────────────────────────────────────────┤ │
-│ 🎬 Video      │ │video.mp4 │1GB  │45%    │2MB/s │████░░░│ │
-│ ⚙ Programs    │ │song.mp3  │5MB  │100%   │Done  │██████│ │
-│ ✓ Finished    │ │doc.pdf   │2MB  │Queue  │Wait  │      │ │
-│ ⏳ Queue       │ └─────────────────────────────────────────┘ │
+│ 📄 Documents  │ │                                            │
+│ 🎵 Music      │ │         Click "Add URL" to start          │
+│ 🎬 Video      │ │                                            │
+│ ⚙ Programs    │ └─────────────────────────────────────────┘ │
+│ ✓ Finished    │                                              │
+│ ⏳ Queue       │                                              │
 ├───────────────┴─────────────────────────────────────────────┤
 │ Download Details                                            │
-│ URL: https://example.com/video.mp4                          │
-│ Status: Downloading (45%) │ Speed: 2.1 MB/s │ ETA: 5 min    │
-│ [████████████░░░░░░░] 45% │ Size: 450/1000 MB              │
+│ URL: [No download selected]                                 │
+│ Status: Ready │ Speed: 0 KB/s │ ETA: --                     │
+│ [░░░░░░░░░░░░░░░░░░░░░] 0% │ Size: 0/0 MB                   │
 │ [Show Details] [Pause] [Cancel]                            │
 ├─────────────────────────────────────────────────────────────┤
-│ Ready - 3 downloads active │ Total: 3.2 MB/s │ [██░] 67%   │
+│ Ready - No active downloads │ Total: 0 KB/s │ [░░░] 0%     │
 └─────────────────────────────────────────────────────────────┘
 ```
+
+### 🎯 Available Executables
+
+After installation, LDM provides:
+
+- **`ldm-complete`** - Main GUI application with full IDM-style interface
+- **`ldm-cli`** - Command-line interface for scripting and automation
+- **`ldm-native-host`** - Native messaging host for browser integration
 
 ## 🎯 Roadmap
 
@@ -288,6 +348,15 @@ ldm/
 - [ ] **Bandwidth Management**: Time-based speed limits
 - [ ] **Download Verification**: Checksum validation
 - [ ] **Plugin System**: Extensible architecture
+
+### ✅ Version 1.0.1 (Current)
+- [x] **Automated Installation**: Cross-platform installer scripts for all Linux distributions
+- [x] **Clean Interface**: Starts empty with no demo data - ready for user downloads
+- [x] **CMake Build System**: Modern, cross-platform build configuration
+- [x] **System Integration**: Desktop files, icons, and menu integration
+- [x] **CLI Support**: Command-line interface available for automation
+- [x] **Project Cleanup**: Single main.cpp with organized modular structure
+- [x] **Maintenance Scripts**: install.sh, uninstall.sh, and clean.sh included
 
 ### 🌟 Version 7.0 (Future)
 - [ ] **Cloud Sync**: Cross-device download sync
@@ -301,6 +370,8 @@ ldm/
 - [ ] **Streaming Integration**: YouTube, Netflix support
 - [ ] **Enterprise Features**: Centralized management
 - [ ] **Protocol Support**: FTP, SFTP, WebDAV
+- [ ] **Mobile App**: Android/iOS companion
+- [ ] **Cloud Sync**: Cross-device synchronization
 
 ## 🤝 Contributing
 
@@ -329,10 +400,29 @@ We welcome contributions! Here's how to get started:
 
 ### 📝 Code Style
 - **C++20** modern standards
-- **Qt** naming conventions
+- **Qt6** framework with modern APIs
+- **CMake** build system
 - **Google** C++ style guide
 - **Doxygen** documentation
 - **Unit tests** for new features
+- **Automated** installation and cleanup scripts
+
+## 📋 System Requirements
+
+### Minimum Requirements
+- **OS**: Linux (Ubuntu 20.04+, Fedora 34+, Arch Linux, etc.)
+- **CPU**: x64 architecture, 1 GHz or faster
+- **RAM**: 512 MB minimum, 1 GB recommended
+- **Storage**: 100 MB free space
+- **Display**: 1024x768 resolution minimum
+
+### Dependencies
+- **Qt6** (Core, Widgets, Network) - GUI framework
+- **libcurl** - HTTP/HTTPS client library
+- **OpenSSL** - SSL/TLS encryption
+- **SQLite3** - Database storage
+- **CMake** 3.16+ - Build system
+- **GCC/Clang** - C++20 compiler
 
 ## 📄 License
 
@@ -369,8 +459,10 @@ SOFTWARE.
 - **libcurl**: Robust networking library
 - **OpenSSL**: Secure communication protocols
 - **SQLite**: Embedded database engine
+- **CMake**: Modern build system
 - **Developer**: aerab243 (Anna-el Gerard RABENANDRASANA)
 - **Contributors**: Everyone who helped build LDM
+- **Linux Community**: For making cross-platform development possible
 
 ## 📞 Support
 
@@ -387,6 +479,7 @@ SOFTWARE.
 - **Commercial Licensing**: Available for enterprise use
 - **Custom Development**: Tailored solutions
 - **Support Contracts**: Priority assistance
+- **Training**: Developer workshops and documentation
 
 ## 🌟 Star History
 
@@ -398,15 +491,23 @@ SOFTWARE.
 ![GitHub language count](https://img.shields.io/github/languages/count/aerab243/ldm)
 ![GitHub top language](https://img.shields.io/github/languages/top/aerab243/ldm)
 ![GitHub commit activity](https://img.shields.io/github/commit-activity/m/aerab243/ldm)
+![GitHub last commit](https://img.shields.io/github/last-commit/aerab243/ldm)
+![GitHub contributors](https://img.shields.io/github/contributors/aerab243/ldm)
+![Platform](https://img.shields.io/badge/platform-Linux-lightgrey.svg)
+![C++ Version](https://img.shields.io/badge/C%2B%2B-20-blue.svg)
+![Qt Version](https://img.shields.io/badge/Qt-6.2+-green.svg)
+![CMake Version](https://img.shields.io/badge/CMake-3.16+-yellow.svg)
+![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)
 
 ---
 
 <div align="center">
   <h3>🚀 Built with ❤️ by aerab243</h3>
-  <p><em>"Download management, IDM-style, but better."</em></p>
-  
-  [⭐ Star this repo](https://github.com/aerab243/ldm) • 
-  [🐛 Report Bug](https://github.com/aerab243/ldm/issues) • 
-  [✨ Request Feature](https://github.com/aerab243/ldm/issues) • 
-  [💬 Join Community](https://github.com/aerab243/ldm/discussions)
+  <p><em>"Clean, automated download management for Linux - Qt6, CMake, and cross-platform installation."</em></p>
+
+  [⭐ Star this repo](https://github.com/aerab243/ldm) •
+  [🐛 Report Bug](https://github.com/aerab243/ldm/issues) •
+  [✨ Request Feature](https://github.com/aerab243/ldm/issues) •
+  [💬 Join Community](https://github.com/aerab243/ldm/discussions) •
+  [📖 Documentation](https://github.com/aerab243/ldm/wiki)
 </div>

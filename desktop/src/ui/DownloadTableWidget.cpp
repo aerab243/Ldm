@@ -306,9 +306,29 @@ void DownloadTableWidget::showContextMenu(const QPoint &pos)
 void DownloadTableWidget::onItemDoubleClicked(QTableWidgetItem *item)
 {
     if (!item) return;
-    
+
     int row = item->row();
     int downloadId = this->item(row, 0)->data(Qt::UserRole).toInt();
-    
+
     emit downloadDoubleClicked(downloadId);
 }
+
+// Stub implementations for missing slot methods
+void DownloadTableWidget::onItemSelectionChanged() { /* stub */ }
+void DownloadTableWidget::onHeaderSectionClicked(int) { /* stub */ }
+void DownloadTableWidget::onHeaderSectionResized(int, int, int) { /* stub */ }
+void DownloadTableWidget::onUpdateTimer() { /* stub */ }
+void DownloadTableWidget::onAnimationFinished() { /* stub */ }
+void DownloadTableWidget::onResumeSelected() { /* stub */ }
+void DownloadTableWidget::onPauseSelected() { /* stub */ }
+void DownloadTableWidget::onStopSelected() { /* stub */ }
+void DownloadTableWidget::onRemoveSelected() { /* stub */ }
+void DownloadTableWidget::onRestartSelected() { /* stub */ }
+void DownloadTableWidget::onOpenFile() { /* stub */ }
+void DownloadTableWidget::onOpenFolder() { /* stub */ }
+void DownloadTableWidget::onCopyUrl() { /* stub */ }
+void DownloadTableWidget::onProperties() { /* stub */ }
+void DownloadTableWidget::onMoveToTop() { /* stub */ }
+void DownloadTableWidget::onMoveUp() { /* stub */ }
+void DownloadTableWidget::onMoveDown() { /* stub */ }
+void DownloadTableWidget::onMoveToBottom() { /* stub */ }
