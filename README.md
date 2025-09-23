@@ -358,13 +358,6 @@ After installation, LDM provides:
 - [x] **Project Cleanup**: Single main.cpp with organized modular structure
 - [x] **Maintenance Scripts**: install.sh, uninstall.sh, and clean.sh included
 
-### 🌟 Version 7.0 (Future)
-- [ ] **Cloud Sync**: Cross-device download sync
-- [ ] **Mobile App**: Android/iOS companion
-- [ ] **Torrent Support**: BitTorrent protocol
-- [ ] **Media Conversion**: Built-in format conversion
-- [ ] **Remote API**: Web-based control panel
-
 ### 🔮 Long-term Vision
 - [ ] **AI-powered Downloads**: Smart categorization
 - [ ] **Streaming Integration**: YouTube, Netflix support
