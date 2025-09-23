@@ -22,6 +22,24 @@
 #include <QStyle>
 #include <QPalette>
 
+// Enums for progress bar status
+enum class ProgressStatus {
+    Normal,
+    Paused,
+    Error,
+    Completed,
+    Connecting,
+    Queued
+};
+
+enum class SegmentStatus {
+    Empty,
+    Downloading,
+    Completed,
+    Error,
+    Paused
+};
+
 /**
  * Custom progress bar that reproduces IDM's progress bar style exactly
  * Features:
@@ -49,9 +67,9 @@ public:
     // === PUBLIC INTERFACE ===
     
     // Progress control
-    void setValue(int value) override;
+    void setValue(int value);
     void setValueAnimated(int value, int duration = 300);
-    void setRange(int minimum, int maximum) override;
+    void setRange(int minimum, int maximum);
     
     // Visual customization
     void setFillColor(const QColor &color);
@@ -72,8 +90,8 @@ public:
     QString textFormat() const { return m_textFormat; }
     
     // Status and appearance
-    void setStatus(ProgressStatus status);
-    ProgressStatus status() const { return m_status; }
+    void setStatus(::ProgressStatus status);
+    ::ProgressStatus status() const { return m_status; }
     void setSegmented(bool segmented, int segmentCount = 8);
     bool isSegmented() const { return m_segmented; }
     void setGlowEffect(bool enabled);
@@ -92,15 +110,7 @@ public:
     void setProgressHeight(int height);
 
     // === STATUS ENUM ===
-    enum ProgressStatus {
-        StatusNormal,       // Default blue progress
-        StatusDownloading,  // Green progress (IDM downloading)
-        StatusPaused,       // Orange progress (IDM paused)
-        StatusCompleted,    // Blue progress (IDM completed)
-        StatusError,        // Red progress (IDM error)
-        StatusQueued,       // Gray progress (IDM queued)
-        StatusStopped       // Dark gray progress (IDM stopped)
-    };
+    // Using global ProgressStatus enum class defined above
 
     // === ANIMATION STATE ===
     enum AnimationState {
@@ -149,7 +159,7 @@ private:
     QFont m_textFont;
     
     // Status and appearance
-    ProgressStatus m_status;
+    ::ProgressStatus m_status;
     bool m_segmented;
     int m_segmentCount;
     bool m_glowEffect;
@@ -241,66 +251,7 @@ private:
     static const int SHADOW_OFFSET = 1;
 };
 
-/**
- * Multi-segment progress bar for download parts visualization
- */
-class SegmentedProgressBar : public CustomProgressBar
-{
-    Q_OBJECT
 
-public:
-    explicit SegmentedProgressBar(QWidget *parent = nullptr);
-    
-    // Segment management
-    void setSegmentCount(int count);
-    int segmentCount() const { return m_segments.size(); }
-    void setSegmentProgress(int segment, int progress);
-    int getSegmentProgress(int segment) const;
-    void setSegmentStatus(int segment, SegmentStatus status);
-    SegmentStatus getSegmentStatus(int segment) const;
-    void resetAllSegments();
-    
-    // Visual customization
-    void setSegmentSpacing(int spacing);
-    int segmentSpacing() const { return m_segmentSpacing; }
-    void setShowSegmentBorders(bool show);
-    bool showSegmentBorders() const { return m_showSegmentBorders; }
-
-    // === SEGMENT STATUS ===
-    enum SegmentStatus {
-        SegmentIdle,
-        SegmentDownloading,
-        SegmentCompleted,
-        SegmentError,
-        SegmentPaused
-    };
-
-    struct Segment {
-        int progress;
-        SegmentStatus status;
-        QRect rect;
-        
-        Segment() : progress(0), status(SegmentIdle) {}
-    };
-
-protected:
-    void paintEvent(QPaintEvent *event) override;
-    void resizeEvent(QResizeEvent *event) override;
-
-signals:
-    void segmentClicked(int segment);
-    void segmentProgressChanged(int segment, int progress);
-
-private:
-    QList<Segment> m_segments;
-    int m_segmentSpacing;
-    bool m_showSegmentBorders;
-    
-    void updateSegmentGeometry();
-    void paintSegment(QPainter &painter, int index, const Segment &segment);
-    QColor getSegmentColor(SegmentStatus status) const;
-    int getSegmentAtPosition(const QPoint &pos) const;
-};
 
 /**
  * Circular progress indicator (for speeds, completion percentage)

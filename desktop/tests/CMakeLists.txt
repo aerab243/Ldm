@@ -14,6 +14,8 @@ set(TEST_SOURCES
     ../src/core/SpeedCalculator.cpp
     ../src/core/Scheduler.cpp
     ../src/utils/Logger.cpp
+    ../src/utils/MemoryMappedFile.cpp
+    ../src/utils/MetadataCache.cpp
 )
 
 set(TEST_HEADERS

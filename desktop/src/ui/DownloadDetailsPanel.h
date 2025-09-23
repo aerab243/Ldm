@@ -30,9 +30,9 @@
 #include <QGraphicsDropShadowEffect>
 #include <QScrollArea>
 #include <QSpacerItem>
+#include "SpeedChart.h"
 
 // Forward declarations
-class SpeedChart;
 class SegmentViewer;
 class FilePreviewWidget;
 
@@ -325,49 +325,6 @@ private:
     static const int INFO_SECTION_HEIGHT = 120;        // Info section height
     static const int STATS_SECTION_HEIGHT = 80;        // Stats section height
     static const int TAB_SECTION_MIN_HEIGHT = 150;     // Tab section minimum height
-};
-
-/**
- * Real-time speed chart widget (IDM green line style)
- */
-class SpeedChart : public QWidget
-{
-    Q_OBJECT
-
-public:
-    explicit SpeedChart(QWidget *parent = nullptr);
-    
-    void addDataPoint(int speed, const QDateTime &timestamp = QDateTime::currentDateTime());
-    void clearData();
-    void setMaxSpeed(int maxSpeed);
-    void setTimeRange(int minutes);
-    void setGridVisible(bool visible);
-    void setLabelsVisible(bool visible);
-
-protected:
-    void paintEvent(QPaintEvent *event) override;
-    void resizeEvent(QResizeEvent *event) override;
-    void mouseMoveEvent(QMouseEvent *event) override;
-
-private:
-    struct DataPoint {
-        QDateTime timestamp;
-        int speed;
-    };
-    
-    QList<DataPoint> m_data;
-    int m_maxSpeed;
-    int m_timeRangeMinutes;
-    bool m_showGrid;
-    bool m_showLabels;
-    QPoint m_mousePos;
-    
-    void drawGrid(QPainter &painter);
-    void drawSpeedLine(QPainter &painter);
-    void drawLabels(QPainter &painter);
-    void drawTooltip(QPainter &painter);
-    QPoint mapSpeedToPoint(int speed, const QDateTime &timestamp) const;
-    QString formatSpeedTooltip(int speed, const QDateTime &timestamp) const;
 };
 
 /**

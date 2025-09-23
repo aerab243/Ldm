@@ -41,6 +41,8 @@ set(SOURCES
     src/api/ApiServer.cpp
     src/ui/MainWindow.cpp
     src/ui/DownloadListWidget.cpp
+    src/ui/DownloadTableWidget.cpp
+    src/ui/CategorySidebar.cpp
     src/ui/AddUrlDialog.cpp
     src/ui/ProgressWidget.cpp
     src/ui/StatisticsWidget.cpp
@@ -62,6 +64,8 @@ set(SOURCES
     src/core/Scheduler.h
     src/ui/MainWindow.h
     src/ui/DownloadListWidget.h
+    src/ui/DownloadTableWidget.h
+    src/ui/CategorySidebar.h
     src/ui/AddUrlDialog.h
     src/ui/ProgressWidget.h
     src/ui/StatisticsWidget.h
@@ -84,6 +88,8 @@ set(HEADERS
     src/core/Scheduler.h
     src/ui/MainWindow.h
     src/ui/DownloadListWidget.h
+    src/ui/DownloadTableWidget.h
+    src/ui/CategorySidebar.h
     src/ui/AddUrlDialog.h
     src/ui/ProgressWidget.h
     src/ui/StatisticsWidget.h
@@ -146,8 +152,19 @@ endif()
 # Include current directory for headers
 target_include_directories(ldm-desktop PRIVATE src ${CMAKE_CURRENT_BINARY_DIR})
 
+# Simple GUI executable (functional)
+add_executable(ldm-gui-simple
+    src/main_simple_gui.cpp
+)
+target_link_libraries(ldm-gui-simple
+    Qt6::Core
+    Qt6::Widgets
+    Qt6::Network
+)
+target_include_directories(ldm-gui-simple PRIVATE src ${CMAKE_CURRENT_BINARY_DIR})
+
 # Install
-install(TARGETS ldm-desktop
+install(TARGETS ldm-desktop ldm-gui-simple
     BUNDLE DESTINATION .
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}

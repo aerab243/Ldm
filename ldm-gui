@@ -1,0 +1,224 @@
+#!/bin/bash
+
+# Linux Download Manager (LDM) - Interface Graphique
+# Script de lancement pour l'interface graphique
+# Auteur: Anna-el Gerard RABENANDRASANA (aerab243)
+
+# Couleurs pour les messages
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Configuration
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+BUILD_DIR="$SCRIPT_DIR/desktop/build"
+GUI_EXECUTABLE="$BUILD_DIR/ldm-gui-simple"
+
+# Fonction d'affichage des messages
+print_info() {
+    echo -e "${BLUE}[INFO]${NC} $1"
+}
+
+print_success() {
+    echo -e "${GREEN}[SUCCESS]${NC} $1"
+}
+
+print_warning() {
+    echo -e "${YELLOW}[WARNING]${NC} $1"
+}
+
+print_error() {
+    echo -e "${RED}[ERROR]${NC} $1"
+}
+
+# Fonction d'aide
+show_help() {
+    echo "Linux Download Manager (LDM) - Interface Graphique"
+    echo ""
+    echo "Usage: $0 [OPTIONS]"
+    echo ""
+    echo "Options:"
+    echo "  -h, --help     Afficher cette aide"
+    echo "  -v, --version  Afficher la version"
+    echo "  -b, --build    Compiler avant de lancer"
+    echo "  -c, --check    Vérifier les dépendances"
+    echo "  --debug        Lancer en mode debug"
+    echo ""
+    echo "Exemples:"
+    echo "  $0                 # Lancer l'interface graphique"
+    echo "  $0 --build         # Compiler puis lancer"
+    echo "  $0 --check         # Vérifier les dépendances"
+    echo ""
+}
+
+# Fonction de vérification des dépendances
+check_dependencies() {
+    print_info "Vérification des dépendances..."
+
+    local missing_deps=()
+
+    # Vérifier Qt6
+    if ! pkg-config --exists Qt6Core Qt6Widgets; then
+        missing_deps+=("Qt6 (Core, Widgets)")
+    fi
+
+    # Vérifier l'environnement graphique
+    if [ -z "$DISPLAY" ] && [ -z "$WAYLAND_DISPLAY" ]; then
+        print_warning "Aucun environnement graphique détecté (DISPLAY ou WAYLAND_DISPLAY)"
+    fi
+
+    if [ ${#missing_deps[@]} -eq 0 ]; then
+        print_success "Toutes les dépendances sont installées"
+        return 0
+    else
+        print_error "Dépendances manquantes:"
+        for dep in "${missing_deps[@]}"; do
+            echo "  - $dep"
+        done
+        return 1
+    fi
+}
+
+# Fonction de compilation
+build_gui() {
+    print_info "Compilation de l'interface graphique..."
+
+    if [ ! -d "$BUILD_DIR" ]; then
+        print_info "Création du répertoire de build..."
+        mkdir -p "$BUILD_DIR"
+    fi
+
+    cd "$BUILD_DIR"
+
+    # Configuration CMake
+    print_info "Configuration CMake..."
+    if ! cmake .. -DCMAKE_BUILD_TYPE=Release; then
+        print_error "Échec de la configuration CMake"
+        return 1
+    fi
+
+    # Compilation
+    print_info "Compilation en cours..."
+    if ! make ldm-gui-simple -j$(nproc); then
+        print_error "Échec de la compilation"
+        return 1
+    fi
+
+    print_success "Compilation terminée avec succès"
+    return 0
+}
+
+# Fonction principale de lancement
+launch_gui() {
+    print_info "Lancement de l'interface graphique LDM..."
+
+    # Vérifier que l'exécutable existe
+    if [ ! -f "$GUI_EXECUTABLE" ]; then
+        print_error "L'exécutable GUI n'existe pas: $GUI_EXECUTABLE"
+        print_info "Tentative de compilation automatique..."
+        if ! build_gui; then
+            print_error "Impossible de compiler l'interface graphique"
+            exit 1
+        fi
+    fi
+
+    # Vérifier les permissions d'exécution
+    if [ ! -x "$GUI_EXECUTABLE" ]; then
+        print_info "Attribution des permissions d'exécution..."
+        chmod +x "$GUI_EXECUTABLE"
+    fi
+
+    # Variables d'environnement pour Qt
+    export QT_QPA_PLATFORMTHEME=qt6ct
+    export QT_SCALE_FACTOR=1.0
+
+    # Lancer l'application
+    print_success "Démarrage de l'interface graphique..."
+
+    if [ "$DEBUG_MODE" = "1" ]; then
+        print_info "Mode debug activé"
+        "$GUI_EXECUTABLE" --debug
+    else
+        "$GUI_EXECUTABLE"
+    fi
+
+    local exit_code=$?
+
+    if [ $exit_code -eq 0 ]; then
+        print_success "Interface graphique fermée normalement"
+    else
+        print_error "L'interface graphique s'est fermée avec le code d'erreur: $exit_code"
+    fi
+
+    return $exit_code
+}
+
+# Traitement des arguments
+BUILD_FIRST=0
+CHECK_DEPS=0
+DEBUG_MODE=0
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -h|--help)
+            show_help
+            exit 0
+            ;;
+        -v|--version)
+            if [ -f "$SCRIPT_DIR/VERSION" ]; then
+                echo "LDM GUI v$(cat $SCRIPT_DIR/VERSION)"
+            else
+                echo "LDM GUI v1.0.0"
+            fi
+            exit 0
+            ;;
+        -b|--build)
+            BUILD_FIRST=1
+            shift
+            ;;
+        -c|--check)
+            CHECK_DEPS=1
+            shift
+            ;;
+        --debug)
+            DEBUG_MODE=1
+            shift
+            ;;
+        *)
+            print_error "Option inconnue: $1"
+            show_help
+            exit 1
+            ;;
+    esac
+done
+
+# Vérification des dépendances si demandé
+if [ $CHECK_DEPS -eq 1 ]; then
+    check_dependencies
+    exit $?
+fi
+
+# Compilation si demandée
+if [ $BUILD_FIRST -eq 1 ]; then
+    if ! check_dependencies; then
+        print_error "Impossible de compiler: dépendances manquantes"
+        exit 1
+    fi
+
+    if ! build_gui; then
+        print_error "Échec de la compilation"
+        exit 1
+    fi
+fi
+
+# Vérification rapide des dépendances critiques
+if ! check_dependencies > /dev/null 2>&1; then
+    print_warning "Certaines dépendances sont manquantes"
+    print_info "Utilisez '$0 --check' pour plus de détails"
+fi
+
+# Lancement de l'interface graphique
+launch_gui
+exit $?

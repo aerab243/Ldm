@@ -153,6 +153,8 @@ signals:
 private slots:
     void onItemSelectionChanged();
     void onHeaderSectionClicked(int logicalIndex);
+    void showContextMenu(const QPoint &pos);
+    void onItemDoubleClicked(QTableWidgetItem *item);
     void onHeaderSectionResized(int logicalIndex, int oldSize, int newSize);
     void onUpdateTimer();
     void onAnimationFinished();

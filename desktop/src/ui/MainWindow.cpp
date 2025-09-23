@@ -465,7 +465,7 @@ void MainWindow::addDownloadUrl(const QString &url, const QString &filename)
 void MainWindow::showAddUrlDialog(const QString &url)
 {
     if (!m_addUrlDialog) {
-        m_addUrlDialog = new AddUrlDialog(this);
+        m_addUrlDialog = new AddUrlDialog(url, this);
         connect(m_addUrlDialog, &AddUrlDialog::downloadRequested,
                 this, [this](const AddUrlDialog::DownloadOptions &options) {
                     // Process download request
@@ -840,10 +840,9 @@ void MainWindow::onDownloadSelectionChanged()
     updateUIState();
 }
 
-void MainWindow::onDownloadDoubleClicked(int row, int column)
+void MainWindow::onDownloadDoubleClicked(int row)
 {
     Q_UNUSED(row)
-    Q_UNUSED(column)
     
     // TODO: Open file or show properties
     QMessageBox::information(this, "Open Download", "Opening download...");

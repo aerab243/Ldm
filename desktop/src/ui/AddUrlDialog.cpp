@@ -1,4 +1,5 @@
 #include "AddUrlDialog.h"
+#include "../core/Database.h"
 #include <QFileDialog>
 #include <QUrl>
 #include <QFileInfo>
@@ -9,6 +10,15 @@ AddUrlDialog::AddUrlDialog(Database *database, QWidget *parent)
 {
     setupUI();
     loadCategories();
+}
+
+AddUrlDialog::AddUrlDialog(const QString &url, QWidget *parent)
+    : QDialog(parent), m_database(nullptr)
+{
+    setupUI();
+    if (!url.isEmpty()) {
+        m_urlEdit->setText(url);
+    }
 }
 
 AddUrlDialog::~AddUrlDialog()
@@ -76,10 +86,20 @@ void AddUrlDialog::setupUI()
 void AddUrlDialog::loadCategories()
 {
     m_categoryCombo->clear();
-    QVariantList categories = m_database->getCategories();
-    for (const QVariant &var : categories) {
-        QVariantMap catMap = var.toMap();
-        m_categoryCombo->addItem(catMap["name"].toString(), catMap["id"].toInt());
+    
+    if (m_database) {
+        QVariantList categories = m_database->getCategories();
+        for (const QVariant &var : categories) {
+            QVariantMap category = var.toMap();
+            m_categoryCombo->addItem(category["name"].toString(), category["id"].toInt());
+        }
+    } else {
+        // Add default categories when no database is available
+        m_categoryCombo->addItem("General", 1);
+        m_categoryCombo->addItem("Software", 2);
+        m_categoryCombo->addItem("Music", 3);
+        m_categoryCombo->addItem("Video", 4);
+        m_categoryCombo->addItem("Documents", 5);
     }
 }
 
